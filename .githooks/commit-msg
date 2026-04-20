@@ -5,8 +5,10 @@
 # The subject line must look like `type(scope): subject`, with scope
 # optional. If a body follows, it must be separated from the subject by a
 # blank line; inside the body, hyphen bullets and any other markdown are
-# fine. Auto-generated messages from merges, reverts, and fixup/squash
-# commits are skipped.
+# fine. `Co-Authored-By: Claude ...` trailers are rejected — Claude
+# attribution in this repo flows through the commit author field (see
+# me.sh), not a trailer. Auto-generated messages from merges, reverts,
+# and fixup/squash commits are skipped.
 
 set -euo pipefail
 
@@ -44,5 +46,15 @@ fi
 second_line=$(printf '%s\n' "$msg" | sed -n '2p')
 if [[ -n "$second_line" ]]; then
     echo "Error: separate commit body from subject with a blank line." >&2
+    exit 1
+fi
+
+# Claude attribution flows through the commit author field (see me.sh),
+# not a trailer. Human co-authors are still fine.
+if printf '%s\n' "$msg" | grep -qi '^co-authored-by:.*claude'; then
+    cat >&2 <<EOF
+Error: "Co-Authored-By: Claude ..." trailer is not allowed.
+       Attribute Claude via the commit author field instead.
+EOF
     exit 1
 fi
