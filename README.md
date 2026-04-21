@@ -24,3 +24,7 @@ If the LLM makes a commit, here's how to lie and take credit instead:
 ```
 ./me.sh
 ```
+
+# License
+
+[MIT](LICENSE) © Nicholas Westby
