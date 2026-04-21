@@ -1,6 +1,6 @@
 AI Sorcery - be a magician with Claude Code.
 
-# Install
+# Install & Update
 
 ```
 /plugin marketplace add ai-sorcery/ai-sorcery
@@ -37,7 +37,7 @@ A catalog of language-agnostic practices that compound if installed day one. Ask
 
 > What's the low-hanging fruit in this repo?
 
-Claude scans against the list (observability, persisted test output, committed progress state, structured task workflow, wall-clock test ceiling, automated version bumps, parse-don't-validate, transient-vs-permanent errors, cheap-before-expensive) and surfaces concrete gaps.
+Claude scans against the list (observability, persisted test output, committed progress state, structured task workflow, wall-clock test ceiling, automated version bumps, conventional-commit enforcement, parse-don't-validate, transient-vs-permanent errors, cheap-before-expensive) and surfaces concrete gaps.
 
 ## `using-llm-tasks`
 

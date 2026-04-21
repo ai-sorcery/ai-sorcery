@@ -51,21 +51,28 @@ Any version number that lives in a committed file (`package.json`, `pyproject.to
 - **Check for:** a pre-commit hook, CI job, or release-tool config that mutates the version on commit or merge. Skim recent commits — if half touch the version and half don't, the process is manual.
 - **Seed task shape:** add a pre-commit hook (or CI step) that bumps the version on every commit touching the versioned artifact; match the project's convention (semver, calver, monotonic integer).
 
-## 7. Parse, don't validate
+## 7. Conventional commits enforced by a hook
+
+Commit subjects follow `type(scope): subject`, enforced by a git `commit-msg` hook. Keeps the log scannable, makes `git log --grep` reliable, and unlocks release tooling that keys off the prefix (semantic-release, release-please, changesets).
+
+- **Check for:** a `commit-msg` hook (in `.githooks/` or wherever `core.hooksPath` points) that rejects malformed subjects. Skim the last 20 commit subjects — if prefixes drift (`fix:` vs `Fix:` vs `bugfix:` vs bare sentences), enforcement isn't in place.
+- **Seed task shape:** drop a `commit-msg` hook that validates the subject against a short list of allowed types. This plugin ships a configurable implementation at `${CLAUDE_PLUGIN_ROOT}/conventional-commit-check.sh` — the project's hook can delegate to it and layer any project-specific checks on top. Accepted types are overridable via the `CONVENTIONAL_TYPES` env var (comma-separated); merge / revert / fixup! / squash! subjects auto-pass.
+
+## 8. Parse, don't validate
 
 Use branded / newtype'd types (`UsdAmount`, `EmailAddress`, `FiniteNumber`) so invalid states can't be represented. Parsing happens once at the system boundary; internal code trusts the type.
 
 - **Check for:** branded types in the type system, parser functions at the boundary (`parseAmount`, `parseEmail`), no `number` / `string` sprinkled through business logic for domain values.
 - **Seed task shape:** pick one domain value (e.g., monetary amounts) and introduce a branded type + parser; migrate one or two call sites as the template.
 
-## 8. Transient vs. permanent errors
+## 9. Transient vs. permanent errors
 
 Errors carry an explicit tag saying whether retrying could succeed. Without it, retry logic is heuristic and either over-retries (wasting budget on content errors) or under-retries (giving up on a flaky network).
 
 - **Check for:** an error shape that includes a `transient: true` / `retryable: true` flag, or discriminated-union error types that encode the same thing.
 - **Seed task shape:** introduce `{ transient: boolean }` on the project's error type; classify existing error sites; update the one retry loop that matters most.
 
-## 9. Cheap before expensive
+## 10. Cheap before expensive
 
 When multiple checks or operations produce the same outcome, run the cheap ones first so the expensive ones only see survivors. Applies to validation cascades, test ordering, pipeline stages, and UI render paths.
 

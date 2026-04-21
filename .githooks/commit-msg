@@ -1,60 +1,30 @@
 #!/usr/bin/env bash
 #
-# commit-msg — enforce the conventional commit format described in AGENTS.md.
+# commit-msg — enforce conventional commits via the plugin's canonical
+# `conventional-commit-check.sh`, then layer the ai-sorcery-specific
+# rejection of `Co-Authored-By: Claude ...` trailers on top.
 #
-# The subject line must look like `type(scope): subject`, with scope
-# optional. If a body follows, it must be separated from the subject by a
-# blank line; inside the body, hyphen bullets and any other markdown are
-# fine. `Co-Authored-By: Claude ...` trailers are rejected — Claude
-# attribution in this repo flows through the commit author field (see
-# me.sh), not a trailer. Auto-generated messages from merges, reverts,
-# and fixup/squash commits are skipped.
+# Claude attribution in this repo flows through the commit author field
+# (see me.sh), not a trailer.
 
 set -euo pipefail
 
 commit_msg_file="$1"
+root="$(git rev-parse --show-toplevel)"
 
-# git adds instructional comment lines ("# Please enter the commit message...")
-# and trailing whitespace. Strip them before inspecting the real message.
-msg=$(git stripspace --strip-comments <"$commit_msg_file")
+# Delegate conventional-commits enforcement to the plugin's canonical
+# script. Types match AGENTS.md § Axioms § 2 — add new types to both
+# places if the project grows.
+CONVENTIONAL_TYPES='feat,fix,refactor,docs,chore' \
+  "$root/plugins/sorcery/conventional-commit-check.sh" "$commit_msg_file"
 
-first_line=$(printf '%s\n' "$msg" | head -n 1)
-
-# Merge/revert/fixup/squash commits have auto-generated subjects that
-# don't follow the conventional format; let them through.
-if [[ "$first_line" =~ ^(Merge|Revert|fixup!|squash!) ]]; then
-    exit 0
-fi
-
-# Types match AGENTS.md § Axioms § 2. Add new types to both places.
-subject_pattern='^(feat|fix|refactor|docs|chore)(\([a-z0-9-]+\))?: .+'
-
-if ! [[ "$first_line" =~ $subject_pattern ]]; then
-    cat >&2 <<EOF
-Error: commit subject does not follow conventional commits.
-
-  Expected: type(scope): subject   (scope optional)
-  Types:    feat, fix, refactor, docs, chore
-  Got:      $first_line
-EOF
-    exit 1
-fi
-
-# When a body is present, the second line must be blank so the subject
-# is clearly separated. sed -n '2p' prints line 2 or nothing for a
-# single-line message; either way the check is correct.
-second_line=$(printf '%s\n' "$msg" | sed -n '2p')
-if [[ -n "$second_line" ]]; then
-    echo "Error: separate commit body from subject with a blank line." >&2
-    exit 1
-fi
-
-# Claude attribution flows through the commit author field (see me.sh),
-# not a trailer. Human co-authors are still fine.
+# Project-specific: reject Co-Authored-By: Claude trailers. Human
+# co-authors are still fine.
+msg="$(git stripspace --strip-comments <"$commit_msg_file")"
 if printf '%s\n' "$msg" | grep -qi '^co-authored-by:.*claude'; then
-    cat >&2 <<EOF
+  cat >&2 <<EOF
 Error: "Co-Authored-By: Claude ..." trailer is not allowed.
        Attribute Claude via the commit author field instead.
 EOF
-    exit 1
+  exit 1
 fi
