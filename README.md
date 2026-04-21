@@ -17,6 +17,19 @@ Claude Code blocks writes under `.claude/` by default. With this skill installed
 
 The write gets routed through a bundled bash script and lands in place.
 
+## `launching-claude`
+
+Drops a `claude.sh` at your repo root. Ask:
+
+> Set up `claude.sh` in this repo.
+
+Run it with `./claude.sh`. It sets:
+
+- `IS_DEMO=1`
+- `--rc`
+- `--effort max`
+- `--model claude-opus-4-7`
+
 # Contributing
 
 If the LLM makes a commit, here's how to lie and take credit instead:
