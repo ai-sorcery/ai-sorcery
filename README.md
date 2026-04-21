@@ -31,6 +31,22 @@ Run it with `./claude.sh`. It sets:
 - `--effort max`
 - `--model claude-opus-4-7`
 
+## `following-best-practices`
+
+A catalog of language-agnostic practices that compound if installed day one. Ask:
+
+> What's the low-hanging fruit in this repo?
+
+Claude scans against the list (observability, persisted test output, committed progress state, structured task workflow, wall-clock test ceiling, automated version bumps, parse-don't-validate, transient-vs-permanent errors, cheap-before-expensive) and surfaces concrete gaps.
+
+## `using-llm-tasks`
+
+A markdown-driven task workflow. Ask:
+
+> Set up an LLM task workflow for this repo.
+
+Claude scaffolds `llm-tasks/`, consults `following-best-practices` for a seed task, and drives the four-section lifecycle (Initial Understanding → Tentative Plan → Implementation → Completion Notes). Subsequent invocations handle `new`, `done`, and `clump` through a bundled script.
+
 # Contributing
 
 If the LLM makes a commit, here's how to lie and take credit instead:
