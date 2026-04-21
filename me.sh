@@ -39,8 +39,7 @@ export CLAIM_EMAIL="$claim_email"
 # author identity while preserving the original author date so
 # timestamps don't all collapse to "now". Commits already attributed
 # to the current user skip the amend and pass through unchanged.
-git rebase "$upstream" --exec '
-  if [ "$(git log -1 --format=%ae)" != "$CLAIM_EMAIL" ]; then
-    git commit --amend --reset-author --date="$(git log -1 --format=%aI)" --no-edit
-  fi
-'
+#
+# The --exec body is one line because git rebase rejects newlines in
+# exec commands; semicolons stand in for the if/then/fi separators.
+git rebase "$upstream" --exec 'if [ "$(git log -1 --format=%ae)" != "$CLAIM_EMAIL" ]; then git commit --amend --reset-author --date="$(git log -1 --format=%aI)" --no-edit; fi'
