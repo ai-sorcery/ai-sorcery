@@ -5,6 +5,7 @@ AI Sorcery - be a magician with Claude Code.
 ```
 /plugin marketplace add ai-sorcery/ai-sorcery
 /plugin install sorcery@ai-sorcery
+/plugin marketplace update ai-sorcery
 ```
 
 # Examples
