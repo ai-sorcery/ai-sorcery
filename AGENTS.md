@@ -8,4 +8,4 @@ Favor clarity over cleverness. Use descriptive variable and function names, and 
 
 Format commit messages as `type(scope): subject`, with scope optional. Common types here: `feat`, `fix`, `refactor`, `docs`, `chore`.
 
-A body is optional. When present, separate it from the subject with a blank line, and prefer a hyphen-bulleted list of specifics — one detail per bullet — over a prose paragraph. Skip `Co-Authored-By: Claude ...` trailers; Claude attribution flows through the commit author field (see `me.sh`).
+A body is optional. When present, separate it from the subject with a blank line, and prefer a hyphen-bulleted list of specifics — one detail per bullet — over a prose paragraph.
