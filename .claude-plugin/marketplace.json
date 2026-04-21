@@ -1,0 +1,16 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "ai-sorcery",
+  "description": "AI-assisted development tools and skills for Claude Code.",
+  "owner": {
+    "name": "Nicholas Westby",
+    "email": "sorcery@minify.org"
+  },
+  "plugins": [
+    {
+      "name": "sorcery",
+      "description": "A collection of Claude Code skills and scripts for AI-assisted development.",
+      "source": "./plugins/sorcery"
+    }
+  ]
+}
