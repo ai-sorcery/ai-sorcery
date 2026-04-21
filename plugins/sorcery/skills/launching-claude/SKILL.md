@@ -9,14 +9,15 @@ Drops an executable `./claude.sh` at the root of the user's current repo. They r
 
 ## What to do
 
-Copy the plugin's canonical launcher into the target repo and mark it executable:
+Run the plugin's installer from the root of the user's current repo:
 
 ```bash
-cp "${CLAUDE_PLUGIN_ROOT}/claude.sh" ./claude.sh
-chmod +x ./claude.sh
+"${CLAUDE_PLUGIN_ROOT}/install-launcher.sh"
 ```
 
-If `./claude.sh` already exists in the repo, confirm with the user before overwriting.
+That copies `${CLAUDE_PLUGIN_ROOT}/claude.sh` to `./claude.sh` and marks it executable. It refuses to overwrite an existing `./claude.sh` — if one is already there, confirm with the user that replacing it is intended, then `rm ./claude.sh` before re-running.
+
+Prefer a single invocation of `install-launcher.sh` over an inline `cp && chmod` composite: a single scripted path is easier for the user's permission allowlist to match.
 
 ## What the launcher does
 
