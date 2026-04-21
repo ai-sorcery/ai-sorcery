@@ -56,7 +56,12 @@ Any version number that lives in a committed file (`package.json`, `pyproject.to
 Commit subjects follow `type(scope): subject`, enforced by a git `commit-msg` hook. Keeps the log scannable, makes `git log --grep` reliable, and unlocks release tooling that keys off the prefix (semantic-release, release-please, changesets).
 
 - **Check for:** a `commit-msg` hook (in `.githooks/` or wherever `core.hooksPath` points) that rejects malformed subjects. Skim the last 20 commit subjects — if prefixes drift (`fix:` vs `Fix:` vs `bugfix:` vs bare sentences), enforcement isn't in place.
-- **Seed task shape:** drop a `commit-msg` hook that validates the subject against a short list of allowed types. This plugin ships a configurable implementation at `${CLAUDE_PLUGIN_ROOT}/conventional-commit-check.sh` — the project's hook can delegate to it and layer any project-specific checks on top. Accepted types are overridable via the `CONVENTIONAL_TYPES` env var (comma-separated); merge / revert / fixup! / squash! subjects auto-pass.
+- **Seed task shape:**
+  - **Copy the validator into the repo.** Put the plugin's `conventional-commit-check.sh` into `.githooks/` — inlined inside `commit-msg` for a small hook, or as a sibling script the hook calls. **The hook must be self-contained: no path in it should resolve outside the repository.** A hook that `exec`'s `${CLAUDE_PLUGIN_ROOT}/...` silently no-ops on any clone without the plugin installed and rots on plugin version bump. The plugin's own repo is the one exception — pointing at the in-repo script is fine there because it's committed alongside the hook.
+  - **Activate the hooks directory.** `core.hooksPath` is local git config, not inherited on clone, so a committed-but-dormant hook is a silent trap. Pick one: commit a `scripts/setup.sh` that runs `git config core.hooksPath .githooks` and reference it in README / CONTRIBUTING; or add an onboarding line (`After cloning: git config core.hooksPath .githooks`) to contributor / agent-facing docs; or use ecosystem tooling that auto-activates (Husky or Lefthook via `package.json`'s `prepare` script for JS/TS; `pre-commit` for Python).
+  - **Verify end-to-end.** Stage a trivial change, then run `git commit -m "bogus"` (must reject) and `git commit -m "chore: verify hook"` (must accept). Invoking the script directly on crafted message files isn't sufficient — it misses activation-path, execute-bit, and wrong-directory mistakes.
+  - Accepted types are overridable via the `CONVENTIONAL_TYPES` env var (comma-separated); merge / revert / fixup! / squash! subjects auto-pass.
+  - When reporting completion, state the per-clone activation step explicitly so fresh clones don't inherit the dormant-hook trap unnoticed.
 
 ## 8. Parse, don't validate
 
@@ -82,5 +87,7 @@ When multiple checks or operations produce the same outcome, run the cheap ones 
 ## How to use this list
 
 Scan top to bottom. Stop at the first genuine gap and propose it as the next task; at most, surface two. Don't propose a gap that's already partially addressed — "observability exists for LLM calls but not HTTP" is a refinement, not a day-one gap.
+
+For any practice that installs a mechanism (hooks, CI steps, wrappers, tooling): the seed task isn't done at "script exists." Keep the install self-contained — no paths resolving outside the repo, or the mechanism silently no-ops on clones. Check that it activates on a fresh clone, not just the author's machine; when activation requires per-clone setup (`core.hooksPath`, a `prepare` script, etc.), surface the one-time step in the completion message rather than leaving it implicit. And verify end-to-end by triggering the real code path, not by unit-testing the handler — unit tests miss activation-path, mode-bit, and wrong-directory mistakes that only surface under the real trigger.
 
 If another skill invoked this one for seed inspiration (e.g., `using-llm-tasks` picking the first task for a fresh repo), return the top-ranked gap along with the "Seed task shape" text, adapted to the specific repo. When consulted by `using-llm-tasks`, skip practice #4 — that's the workflow being installed — and pick the next gap instead.
