@@ -32,8 +32,13 @@ resolve_path() {
   fi
 }
 
-action="${1:?Usage: dot-claude.sh <write|append|delete|mkdir> <path>}"
-raw_path="${2:?Missing path argument}"
+if [[ $# -lt 2 ]]; then
+  echo "Usage: dot-claude.sh <write|append|delete|mkdir> <path>" >&2
+  exit 1
+fi
+
+action="$1"
+raw_path="$2"
 resolved="$(resolve_path "$raw_path")"
 
 case "$action" in
@@ -48,6 +53,12 @@ case "$action" in
     echo "[dot-claude] appended to: $raw_path"
     ;;
   delete)
+    # Belt-and-suspenders: refuse to delete filesystem or home root, even
+    # though the rest of the script would happily pass it to `rm -rf`.
+    if [[ "$resolved" == "/" || "$resolved" == "$HOME" ]]; then
+      echo "[dot-claude] refusing to delete root or home directory: $raw_path" >&2
+      exit 1
+    fi
     if [[ -e "$resolved" ]]; then
       rm -rf "$resolved"
       echo "[dot-claude] deleted: $raw_path"
