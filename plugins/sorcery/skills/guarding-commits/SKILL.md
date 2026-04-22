@@ -25,7 +25,7 @@ The installer:
 4. Adds `commit-disallowed-terms.txt` to `.gitignore` if absent.
 5. Creates or extends `.githooks/pre-commit` (scans the staged diff) and `.githooks/commit-msg` (scans the message) — a fresh hook if none exists, otherwise a prepended call guarded by a `# guarding-commits-check` marker so repeated installs don't duplicate lines. The call is prepended (not appended) because a trailing `exec` in the existing hook would otherwise short-circuit the check.
 
-When the installer finishes it prints an onboarding blurb the user should copy into README / CONTRIBUTING (see the *Activating for teammates* section below).
+When the installer finishes it prints next-step guidance for baking the per-clone activation into a setup script (see the *Activating for teammates* section below).
 
 ## Getting the user started on their term list
 
@@ -39,13 +39,15 @@ The bundled `example-commit-disallowed-terms.txt` has these already written out 
 
 ## Activating for teammates
 
-Per the sibling skill `following-best-practices` (git-hooks activation guidance), `core.hooksPath` is per-clone local git config — **it is not inherited on clone**. A committed hook directory is a silent trap without an activation step. The installer handles the current clone; teammates need one of:
+`core.hooksPath` is per-clone local git config — **it is not inherited on clone**. A committed hook directory is a silent trap without an activation step. The installer handles the current clone; teammates need the activation baked into a script per the sibling skill `following-best-practices` (the *Setup script, not setup instructions* practice). In rough order of preference:
 
-- An onboarding line in README / CONTRIBUTING: `After cloning: git config core.hooksPath .githooks`.
-- A committed `scripts/setup.sh` that runs the same command, referenced in onboarding docs.
-- Ecosystem tooling that auto-activates on install — Husky or Lefthook via a `package.json` `prepare` script for JS/TS projects; the `pre-commit` framework for Python.
+1. **Ecosystem lifecycle hook** that runs on dependency install — strongest because no separate step for the next person.
+   - JS/TS (`package.json` exists): add a `prepare` script — `"prepare": "git config --get core.hooksPath >/dev/null 2>&1 || git config core.hooksPath .githooks"` — fires on every `bun install` / `npm install` / `pnpm install`.
+   - Python (`pyproject.toml` or `requirements*.txt` exists): use the `pre-commit` framework's `pre-commit install` step in the project's standard setup flow.
+2. **A committed `scripts/setup.sh`** (or root-level `setup.sh`) that runs `git config core.hooksPath .githooks`, with the README pointing at it once instead of listing git commands.
+3. **A prose onboarding line in README / CONTRIBUTING** as a last resort — instructions in prose drift, get skipped, or get done out of order.
 
-Offer to add the onboarding line to the repo's README / CONTRIBUTING as a follow-up; the installer itself doesn't touch those files.
+When asked to apply, detect by manifest: `package.json` → `prepare` hook; `pyproject.toml` or `requirements*.txt` → `pre-commit install`; otherwise create or extend `scripts/setup.sh`. The installer itself doesn't touch any of these — leave it as a deliberate follow-up so the user reviews the change.
 
 ## How the check works internally
 
@@ -64,12 +66,12 @@ In diff mode the scan is **added lines only**, not whole-file — legacy content
 
 - **Terms can't start with `#`.** `#` at the start of a line is treated as a comment. If the user genuinely wants to block a `#`-prefixed string, they have to change the match logic or the term format — document this if it comes up.
 - **Plain-string match, case-insensitive, not regex.** Fixed-string matching keeps the config format safe for strings containing spaces, slashes, quotes, etc. `grep -F -i` means a single term like `MyProject` also blocks `myproject` and `MYPROJECT` — intentional, so a casing slip doesn't let a term through. If the user asks for regex or case-sensitive matching, note that it requires a rewrite (and that false positives get people running `--no-verify` fast).
-- **`core.hooksPath` is per-clone, not per-repo.** Per the *Activating for teammates* section — a fresh clone silently skips the hook until a dev runs `git config core.hooksPath .githooks` (or an equivalent auto-activator). The installer prints this in its final message; the user still has to decide how to surface it to teammates.
+- **`core.hooksPath` is per-clone, not per-repo.** Per the *Activating for teammates* section — a fresh clone silently skips the hook until activation runs (lifecycle hook, `scripts/setup.sh`, etc.). The installer prints next-step guidance; the user still has to decide which form fits their project.
 - **The hook is bypassable with `--no-verify`.** Inherent to all client-side git hooks. If the threat model needs server-side enforcement, this skill isn't the answer — direct the user to a pre-receive hook or CI-side scan.
 - **Very large diffs are scanned in full.** No size cap. For monorepos doing occasional massive reformats, the check could noticeably slow a commit. Acceptable trade-off for now; if it bites, add a size guard.
 - **Does not scan existing file content on rename.** `--no-renames` rewrites renames to add+delete, which means a rename WITHIN the repo (already-tracked file moving paths) reappears as added content and IS rescanned. A plain path-only rename of untouched content will therefore block if the existing content already contained a disallowed term — surprising but arguably correct.
 
 ## Related skills
 
-- `following-best-practices` — the source of the git-hooks activation guidance baked into this skill's *Activating for teammates* section.
+- `following-best-practices` — the source of the *Setup script, not setup instructions* practice referenced in *Activating for teammates*.
 - `using-dot-claude` — sibling installer pattern for hooks that live under `.claude/`. Not used here because git hooks are under `.githooks/`, not `.claude/`.

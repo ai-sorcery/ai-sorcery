@@ -69,7 +69,7 @@ Installs a self-contained pre-commit hook that blocks any commit whose staged di
 
 > Set up a disallowed-terms commit guard in this repo.
 
-Useful for personal emails, obvious secret prefixes, and `DO NOT COMMIT` markers. Matching is plain-string so spaces and regex metacharacters are fine. The hook scans added lines only, so legacy content doesn't block unrelated commits. `core.hooksPath` is per-clone local config — the installer prints an onboarding line to copy into README / CONTRIBUTING so teammates activate it after cloning.
+Useful for personal emails, obvious secret prefixes, and `DO NOT COMMIT` markers.
 
 ## `running-improvement-loops`
 

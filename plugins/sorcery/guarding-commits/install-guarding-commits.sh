@@ -123,6 +123,7 @@ EOF
 wire_hook "pre-commit" './.githooks/check-disallowed-terms.sh || exit 1'
 wire_hook "commit-msg" './.githooks/check-disallowed-terms.sh --message "$1" || exit 1'
 
+active_hooks_path="$(git -C "$repo_root" config --local --get core.hooksPath)"
 cat <<EOF
 
 install: done.
@@ -130,13 +131,23 @@ install: done.
 Next steps:
 
   1. Edit $terms_file to add the strings you actually want to block.
-  2. Teammates cloning this repo need to activate the hooks directory
-     (core.hooksPath is per-clone local config — not inherited). Pick one:
-       - add 'git config core.hooksPath $(git -C "$repo_root" config --local --get core.hooksPath)' to a CONTRIBUTING.md / README onboarding section, OR
-       - commit a scripts/setup.sh that runs the above line and reference it
-         in onboarding docs, OR
-       - use ecosystem tooling that auto-activates (Husky / Lefthook via a
-         package.json prepare script; pre-commit for Python projects).
+  2. Bake the hooks activation into a script so fresh clones aren't silently
+     unguarded (core.hooksPath is per-clone local config — not inherited).
+     In rough order of preference:
+
+       - JS/TS projects: add a 'prepare' script to package.json so it runs
+         on every install:
+           "prepare": "git config --get core.hooksPath >/dev/null 2>&1 || git config core.hooksPath ${active_hooks_path}"
+
+       - Python projects: invoke 'pre-commit install' as part of project
+         setup (pyproject.toml dev extras, requirements-dev.txt, etc.).
+
+       - Anything else: commit a scripts/setup.sh that runs:
+           git config core.hooksPath ${active_hooks_path}
+         and reference it once from the README.
+
+     A bare "after cloning, run ..." line in CONTRIBUTING is the last resort
+     and tends to drift.
 
   3. Test end-to-end: stage a line containing one of your terms and try to
      commit — the pre-commit hook should refuse it. Also try a clean change
