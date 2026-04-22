@@ -47,6 +47,14 @@ A markdown-driven task workflow. Ask:
 
 Claude scaffolds `llm-tasks/`, consults `following-best-practices` for a seed task, and drives the four-section lifecycle (Initial Understanding → Tentative Plan → Implementation → Completion Notes). Subsequent invocations handle `new`, `done`, and `clump` through a bundled script.
 
+## `summarizing-sessions`
+
+Wires a SessionEnd hook that drops a dated markdown summary of each session into `~/LLM_Summaries/YYYY-MM-DD/`. Ask:
+
+> Set up session summaries for this repo.
+
+The hook self-forks into the background, skips subagent transcripts, and calls Haiku with a forced JSON schema so each summary is a parseable `{title, body}` pair. Point an Obsidian vault at `~/LLM_Summaries/` to read back the daily log with no extra tooling.
+
 # Contributing
 
 If the LLM makes a commit, here's how to lie and take credit instead:
