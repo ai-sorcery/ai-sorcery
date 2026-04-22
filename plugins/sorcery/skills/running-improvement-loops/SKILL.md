@@ -46,6 +46,8 @@ Stop the loop: press `q`, `s`, or `h` (takes effect at the end of the current it
 
 Adding a persona mid-loop is fine: edit `personas.json` and the next iteration picks up the new list. Removing one renumbers the cycle.
 
+Optional persona field `showGlobalHistory: N` injects a summary of the last N iterations across all personas into that persona's prompt, under the heading "Last N Iterations (All Personas)". Set it on personas whose instructions reference the recent global history — e.g. the default `wildcard` uses 20 to enforce its "don't repeat the last 20 iterations" rule. Omit the field to skip the injection.
+
 ## The wrap-up hook
 
 `improvement/wrap-up-hook.sh` fires on every PostToolUse event. If the iteration has been running past `LOOP_WRAPUP_THRESHOLD` (default 60m) but is still within the 90m hard deadline, it emits a system-reminder telling Claude to finalize: run tests, call `finish.sh`, commit. Fires at most once per iteration via a `.wrap-up-fired` sentinel file.
