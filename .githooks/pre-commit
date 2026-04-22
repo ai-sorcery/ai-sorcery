@@ -1,28 +1,17 @@
 #!/usr/bin/env bash
 #
-# pre-commit — bump the sorcery plugin's patch version on every commit.
-#
-# Reads plugins/sorcery/.claude-plugin/plugin.json, increments the patch
-# component, writes it back, and stages the change so the bump lands in
-# the commit being created. Runs on every commit by design; the accepted
-# trade-off is a noisy patch sequence in exchange for never having to
-# remember to bump manually.
+# pre-commit — delegate to scripts/bump-plugin-versions.ts, which bumps a
+# plugin's patch version only when that plugin's contents actually changed
+# in the staged set. Keeps the hook itself trivial so the real logic is
+# reusable outside git (e.g., for manual verification).
 
 set -euo pipefail
 
-manifest="plugins/sorcery/.claude-plugin/plugin.json"
+root="$(git rev-parse --show-toplevel)"
 
-if ! command -v jq >/dev/null 2>&1; then
-    echo "pre-commit: jq is required to bump $manifest" >&2
+if ! command -v bun >/dev/null 2>&1; then
+    echo "pre-commit: bun is required to run scripts/bump-plugin-versions.ts" >&2
     exit 1
 fi
 
-current="$(jq -r '.version' "$manifest")"
-IFS='.' read -r major minor patch <<< "$current"
-new="${major}.${minor}.$((patch + 1))"
-
-tmp="$(mktemp)"
-jq --arg v "$new" '.version = $v' "$manifest" > "$tmp"
-mv "$tmp" "$manifest"
-
-git add "$manifest"
+exec bun "$root/scripts/bump-plugin-versions.ts"
