@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+
+./.githooks/check-disallowed-terms.sh || exit 1  # guarding-commits-check
+
 #
 # pre-commit — delegate to scripts/bump-plugin-versions.ts, which bumps a
 # plugin's patch version only when that plugin's contents actually changed

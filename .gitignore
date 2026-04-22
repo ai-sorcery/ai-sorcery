@@ -6,3 +6,4 @@
 
 # Per-repo agent task files (personal / untracked by design)
 llm-tasks/
+commit-disallowed-terms.txt

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+
+./.githooks/check-disallowed-terms.sh --message "$1" || exit 1  # guarding-commits-check
+
 #
 # commit-msg — enforce conventional commits via the plugin's canonical
 # `conventional-commit-check.sh`, then layer the ai-sorcery-specific

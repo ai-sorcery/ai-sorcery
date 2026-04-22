@@ -1,0 +1,7 @@
+{
+  "name": "ai-sorcery",
+  "private": true,
+  "scripts": {
+    "prepare": "git config --get core.hooksPath >/dev/null 2>&1 || git config core.hooksPath .githooks"
+  }
+}

@@ -85,6 +85,8 @@ The `using-llm-tasks` skill has a companion mode (`./task-loop.sh`) that drains 
 
 `sorcery-dev` is a repo-internal companion plugin. Its single skill `adding-skills` is the checklist Claude walks when a contributor asks to "add a sorcery skill." It's installed alongside `sorcery` when you add this marketplace, but fires only on contributor intents — outside this repo it has no reason to trigger.
 
+After cloning, run `bun install` once to activate the repo's git hooks (sets `core.hooksPath=.githooks`).
+
 Running `./claude.sh` inside this repo activates the local `sorcery` and `sorcery-dev` plugins, so you're always using your latest changes to the plugins.
 
 If the LLM makes a commit, here's how to lie and take credit instead:
