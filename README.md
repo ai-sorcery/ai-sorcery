@@ -75,6 +75,8 @@ The `using-llm-tasks` skill has a companion mode (`./task-loop.sh`) that drains 
 
 # Contributing
 
+The repo ships a second internal plugin, `sorcery-dev`, whose single skill `adding-skills` is the checklist Claude walks when a contributor asks to "add a sorcery skill." It's installed alongside `sorcery` when you add this marketplace, but fires only on contributor intents — outside this repo it has no reason to trigger.
+
 If the LLM makes a commit, here's how to lie and take credit instead:
 
 ```

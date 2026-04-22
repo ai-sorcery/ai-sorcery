@@ -11,6 +11,11 @@
       "name": "sorcery",
       "description": "A collection of Claude Code skills and scripts for AI-assisted development.",
       "source": "./plugins/sorcery"
+    },
+    {
+      "name": "sorcery-dev",
+      "description": "Companion plugin for authoring skills in the ai-sorcery repo — not generally useful outside it.",
+      "source": "./plugins/sorcery-dev"
     }
   ]
 }

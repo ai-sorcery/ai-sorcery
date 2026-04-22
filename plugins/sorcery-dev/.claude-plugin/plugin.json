@@ -1,0 +1,10 @@
+{
+  "name": "sorcery-dev",
+  "version": "0.1.0",
+  "description": "Companion plugin for authoring skills in the ai-sorcery repo — not generally useful outside it.",
+  "author": {
+    "name": "Nicholas Westby",
+    "email": "sorcery@minify.org"
+  },
+  "license": "MIT"
+}
