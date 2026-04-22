@@ -63,6 +63,16 @@ Drops `./me.sh` at your repo root. Ask:
 
 Running `./me.sh` rewrites the last 5 commits so their author field is the current git user, preserving each commit's original author date. Commits already attributed to the user are no-ops, so re-runs are idempotent.
 
+## `running-improvement-loops`
+
+Installs an autonomous improvement loop under `./improvement/`. Ask:
+
+> Set up the improvement loop in this repo.
+
+Running `./improvement/loop.sh` launches Claude repeatedly — one iteration at a time — under a four-subprocess watchdog (wall-clock SIGTERM + runtime ticker + quit-key listener + result-event grace period), rotating through personas (test-strengthener, code-improver, checkin, wildcard by default). Each iteration reads `LOOP.md`, picks up a persona, does the work, appends to the changelogs, and exits. Stop with `q`/`s`/`h` or `touch stop.txt`.
+
+The `using-llm-tasks` skill has a companion mode (`./task-loop.sh`) that drains the `llm-tasks/` queue under the same watchdog — ask "set up the task loop" to install it.
+
 # Contributing
 
 If the LLM makes a commit, here's how to lie and take credit instead:

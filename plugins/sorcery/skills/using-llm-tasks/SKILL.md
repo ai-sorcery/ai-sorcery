@@ -1,6 +1,6 @@
 ---
 name: using-llm-tasks
-description: Use when the user wants to create a new task, work the next pending task, mark a task done, or archive finished tasks in a repo's `llm-tasks/` directory. Also use when the user wants to introduce this markdown-driven task workflow to a repo that doesn't have one yet ("set up an LLM task workflow", "let's track work as markdown files") — first invocation scaffolds `llm-tasks/` and seeds the first task from the `following-best-practices` skill.
+description: Use when the user wants to create a new task, work the next pending task, mark a task done, or archive finished tasks in a repo's `llm-tasks/` directory. Also use when the user wants to introduce this markdown-driven task workflow to a repo that doesn't have one yet ("set up an LLM task workflow", "let's track work as markdown files") — first invocation scaffolds `llm-tasks/` and seeds the first task from the `following-best-practices` skill. Also handles installing the `task-loop.sh` autonomous mode that drains the queue unattended.
 ---
 
 # Using LLM Tasks
@@ -39,6 +39,28 @@ Pick the behavior from what the user is asking for:
 | "add a task for X"                       | Call `new <name>` with a short kebab-case name; stub the four sections from what the user told you. |
 | "I finished X"                           | Call `done <name>`. Don't clump automatically — the user may have more to mark done.            |
 | "archive the finished ones"              | Call `clump`.                                                                                    |
+| "run the task loop" / "drain the queue unattended" | Install `task-loop.sh` (see below); tell the user to run `./task-loop.sh` from the repo root. |
+
+## Autonomous mode: `task-loop.sh`
+
+When the user wants the queue drained unattended — "work through everything overnight," "set up a task loop," "drain the queue," etc. — install the harness that launches Claude Code repeatedly until every pending task is done.
+
+Run the installer from the repo root:
+
+```bash
+"${CLAUDE_PLUGIN_ROOT}/loop/install-task-loop.sh"
+```
+
+That drops `task-loop.sh` + `prompt-task-loop.sh` at the repo root, creates `data/task-loop-inbox/` and `data/task-loop-logs/`, installs a wrap-up hook and a sideload hook under `improvement/`, and wires both hooks into `.claude/settings.json` via `dot-claude.sh`. Idempotent — re-running skips what's already present.
+
+Afterwards:
+
+- Run the loop: `./task-loop.sh`. It counts pending tasks (anything in `llm-tasks/` that isn't `DONE-*` or `IGNORE-*`), picks up the first, and works it via the four-section lifecycle above. On crash or timeout, the next iteration reads the previous log and resumes.
+- Send a prompt to the running loop: `./prompt-task-loop.sh "reconsider the approach on task X"`. The sideload hook injects your message as additional context on the next PostToolUse event. This is how remote messages reach the loop in headless mode (`claude -p --rc` doesn't register a Remote Control bridge, so there's no iPhone-app session to talk to directly).
+- Stop the loop: press `q`/`s`/`h` or `touch stop.txt`. The current iteration finishes before the loop exits.
+- Exit when the queue empties: set `TASK_LOOP_EXIT_WHEN_DONE=1` before running (default is to idle-wait for new tasks).
+
+For the broader open-ended improvement harness (rotating personas, changelogs, drift-detection), invoke the sibling skill `running-improvement-loops`. It shares the `improvement/` scaffolding and the four-subprocess watchdog pattern with `task-loop.sh`.
 
 ## Invoking the script
 
