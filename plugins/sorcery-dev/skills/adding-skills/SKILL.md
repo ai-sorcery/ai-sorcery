@@ -36,7 +36,7 @@ If the happy path doesn't fit in a paragraph, the scope isn't clear yet. Iterate
 
 ### File layout
 
-- Skill dir: `plugins/sorcery/skills/<skill-name>/` with `SKILL.md`, `README.md`, and an optional `example.png`.
+- Skill dir: `plugins/sorcery/skills/<skill-name>/` with `SKILL.md`, `README.md`, and an optional `example.png` (the user will tend to provide this later after actually using the fully built skill).
 - Shared scripts the skill calls:
   - Single file → flat at the plugin root (e.g. `plugins/sorcery/me.sh`).
   - Bundle of three or more related files → a subdir at the plugin root (e.g. `plugins/sorcery/loop/`).
@@ -69,14 +69,6 @@ For wrappers that register hooks:
 - No explicit give-up paths. Don't write "if you can't do X, just do Y" — it legitimises settling. If the agent is truly blocked, it will reason to a fallback on its own.
 - `Caveats` ordered by importance, not alphabetically. Flag every dependency (jq, bun, Playwright), every stability caveat (undocumented flags, env vars), every non-obvious behavior.
 
-### Persona instructions (rare — only for skills that own personas)
-
-Most skills don't own personas. The ones that do (e.g., `running-improvement-loops`) run persona instructions **every iteration** of a loop. If the new skill is in that family:
-
-- Persona instructions are recurring-work only. One-time setup belongs in the install flow, the seed task, or a dedicated `checkin` persona — never in a persona that fires every iteration.
-- For meta-review personas, require a concrete change every iteration (don't let the persona pass through with a "looked fine" conclusion).
-- No explicit escape hatches in persona text ("if you can't, settle for..."). Same reasoning as the SKILL.md rule above.
-
 ### Testing
 
 Before committing:
@@ -91,7 +83,6 @@ Before committing:
 
 - Add a section to the root `README.md`'s Examples block matching the existing per-skill pattern — heading + `> Ask: ...` + a 2-3 line description of what the skill does.
 - If the work surfaced a new language-agnostic practice, add it to `following-best-practices/SKILL.md` (named entry, seed task shape included).
-- Don't manually bump `plugins/sorcery/.claude-plugin/plugin.json`. The pre-commit hook at `.githooks/pre-commit` bumps its patch version on every commit automatically. The pre-commit hook does NOT touch `plugins/sorcery-dev/.claude-plugin/plugin.json` — if you edit the sorcery-dev plugin, bump that version manually.
 
 ### Review and commit
 
@@ -99,12 +90,8 @@ Before the commit, invoke `superpowers:requesting-code-review` (external plugin 
 
 Conventional commit: `feat(sorcery): add <skill-name> skill` for a new skill, `feat(sorcery): extend <skill-name> skill` for extensions, `refactor(sorcery): ...` for restructuring existing skills. Body is a hyphen-bulleted list of specifics — one detail per bullet.
 
-**Never include a `Co-Authored-By: Claude` trailer.** The commit-msg hook at `.githooks/commit-msg` rejects it. Attribute Claude via the commit author field instead, using the sibling skill `claiming-authorship` (run `./me.sh` at the repo root) after the commit to re-author recent commits to the current git user.
-
-## Related sibling skills
+## Related skills
 
 - `superpowers:requesting-code-review` (external plugin) — dispatch a reviewer subagent before committing.
-- `using-llm-tasks` — queue the authoring work as a markdown task if it's more than a few minutes of work.
 - `using-dot-claude` — every installer that touches `.claude/` routes through its bundled `dot-claude.sh`.
-- `claiming-authorship` — re-attribute commits after Claude authored them.
 - `following-best-practices` — the home for new language-agnostic practices that belong in the catalog rather than in a new skill.
