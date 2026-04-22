@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
-# install-guarding-commits.sh — install the guarding-commits pre-commit
-# check into the repo whose working directory this is invoked from.
+# install-guarding-commits.sh — install the guarding-commits check into
+# the repo whose working directory this is invoked from.
 #
 # Idempotent. Safe to re-run to pick up an updated check-disallowed-terms.sh.
 # Never overwrites an existing commit-disallowed-terms.txt.
@@ -55,28 +55,40 @@ if [ ! -f "$gitignore" ] || ! grep -q -x -F -e "$ignore_line" "$gitignore"; then
     echo "install: added $ignore_line to .gitignore"
 fi
 
-# --- wire into pre-commit --------------------------------------------------
-hook="$hooks_dir/pre-commit"
+# --- wire hooks -------------------------------------------------------------
+# wire_hook <hook_name> <invocation>
+# Creates a fresh hook with a shebang + `set` + the invocation if the file is
+# absent; otherwise prepends the invocation (after the shebang and any leading
+# `set` lines) guarded by a marker comment so repeated installs don't duplicate.
+# Prepend (not append) because a trailing `exec` in the existing hook would
+# otherwise short-circuit the check.
 marker="# guarding-commits-check"
-invocation='./.githooks/check-disallowed-terms.sh || exit 1  '"$marker"
+wire_hook() {
+    local hook_name="$1"
+    local invocation="$2"
+    local hook="$hooks_dir/$hook_name"
+    local full_invocation="$invocation  $marker"
 
-if [ ! -f "$hook" ]; then
-    cat > "$hook" <<'EOF'
+    if [ ! -f "$hook" ]; then
+        cat > "$hook" <<EOF
 #!/usr/bin/env bash
 set -euo pipefail
 
-./.githooks/check-disallowed-terms.sh || exit 1  # guarding-commits-check
+$full_invocation
 EOF
-    chmod +x "$hook"
-    echo "install: created $hook"
-elif grep -q -F -e "$marker" "$hook"; then
-    echo "install: pre-commit already wired — no change"
-else
-    # Prepend the invocation after the shebang/set- prologue so it runs before
-    # any later 'exec' replaces the shell. We insert after the first run of
-    # consecutive shebang + `set` lines.
+        chmod +x "$hook"
+        echo "install: created $hook"
+        return
+    fi
+
+    if grep -q -F -e "$marker" "$hook"; then
+        echo "install: $hook_name already wired — no change"
+        return
+    fi
+
+    local tmp
     tmp="$(mktemp)"
-    awk -v inv="$invocation" '
+    awk -v inv="$full_invocation" '
         BEGIN { inserted = 0; in_prologue = 1 }
         {
             if (in_prologue && (NR == 1 && $0 ~ /^#!/)) {
@@ -106,7 +118,10 @@ else
     chmod --reference="$hook" "$tmp" 2>/dev/null || chmod +x "$tmp"
     mv "$tmp" "$hook"
     echo "install: prepended guarding-commits-check to existing $hook"
-fi
+}
+
+wire_hook "pre-commit" './.githooks/check-disallowed-terms.sh || exit 1'
+wire_hook "commit-msg" './.githooks/check-disallowed-terms.sh --message "$1" || exit 1'
 
 cat <<EOF
 
@@ -124,5 +139,7 @@ Next steps:
          package.json prepare script; pre-commit for Python projects).
 
   3. Test end-to-end: stage a line containing one of your terms and try to
-     commit — the hook should refuse it.
+     commit — the pre-commit hook should refuse it. Also try a clean change
+     with a disallowed term in the commit message — the commit-msg hook
+     should refuse that too.
 EOF

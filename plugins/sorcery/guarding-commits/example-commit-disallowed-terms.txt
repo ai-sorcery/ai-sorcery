@@ -1,8 +1,9 @@
 # Disallowed terms — any of these appearing in an added/changed line of a
 # staged commit will abort the commit. One term per line. Lines starting
 # with '#' are comments. Leading and trailing whitespace is trimmed.
-# Matching is plain-string (fixed), so spaces and regex metacharacters
-# are safe without escaping.
+# Matching is plain-string (fixed) and case-insensitive, so spaces and
+# regex metacharacters are safe without escaping and a casing slip
+# (e.g. `myproject` vs `MyProject`) won't let a term through.
 #
 # Uncomment and edit the entries below as needed. Tailor this list to the
 # project — an overly broad list will produce false positives and train
