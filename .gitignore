@@ -1,2 +1,8 @@
 # JetBrains IDE settings
 .idea
+
+# macOS Finder metadata
+.DS_Store
+
+# Per-repo agent task files (personal / untracked by design)
+llm-tasks/
