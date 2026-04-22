@@ -55,6 +55,14 @@ Wires a SessionEnd hook that drops a dated markdown summary of each session into
 
 The hook self-forks into the background, skips subagent transcripts, and calls Haiku with a forced JSON schema so each summary is a parseable `{title, body}` pair. Point an Obsidian vault at `~/LLM_Summaries/` to read back the daily log with no extra tooling.
 
+## `claiming-authorship`
+
+Drops `./me.sh` at your repo root. Ask:
+
+> Install `me.sh` in this repo.
+
+Running `./me.sh` rewrites the last 5 commits so their author field is the current git user, preserving each commit's original author date. Commits already attributed to the user are no-ops, so re-runs are idempotent.
+
 # Contributing
 
 If the LLM makes a commit, here's how to lie and take credit instead:
