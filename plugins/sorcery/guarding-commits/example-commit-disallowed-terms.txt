@@ -1,0 +1,27 @@
+# Disallowed terms — any of these appearing in an added/changed line of a
+# staged commit will abort the commit. One term per line. Lines starting
+# with '#' are comments. Leading and trailing whitespace is trimmed.
+# Matching is plain-string (fixed), so spaces and regex metacharacters
+# are safe without escaping.
+#
+# Uncomment and edit the entries below as needed. Tailor this list to the
+# project — an overly broad list will produce false positives and train
+# people to bypass the hook.
+
+# --- personal identifiers ---
+# my-email@example.com
+# 555-123-4567
+
+# --- obvious secret prefixes ---
+# (Comment in only if you aren't already running a dedicated secret scanner.)
+# sk-proj-
+# ghp_
+# AKIA
+# xoxb-
+# -----BEGIN PRIVATE KEY-----
+
+# --- "don't ship this" markers ---
+# DO NOT COMMIT
+# TODO:remove
+# console.log("debug
+# localhost:

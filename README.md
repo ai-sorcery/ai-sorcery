@@ -63,6 +63,14 @@ Drops `./me.sh` at your repo root. Ask:
 
 Running `./me.sh` rewrites the last 5 commits so their author field is the current git user, preserving each commit's original author date. Commits already attributed to the user are no-ops, so re-runs are idempotent.
 
+## `guarding-commits`
+
+Installs a self-contained pre-commit hook that blocks any commit whose staged diff adds a line containing a string from a git-ignored `commit-disallowed-terms.txt`. Ask:
+
+> Set up a disallowed-terms commit guard in this repo.
+
+Useful for personal emails, obvious secret prefixes, and `DO NOT COMMIT` markers. Matching is plain-string so spaces and regex metacharacters are fine. The hook scans added lines only, so legacy content doesn't block unrelated commits. `core.hooksPath` is per-clone local config — the installer prints an onboarding line to copy into README / CONTRIBUTING so teammates activate it after cloning.
+
 ## `running-improvement-loops`
 
 Installs an autonomous improvement loop under `./improvement/`. Ask:
