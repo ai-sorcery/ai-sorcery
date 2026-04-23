@@ -10,6 +10,18 @@ AI Sorcery - be a magician with Claude Code.
 
 # Examples
 
+<!-- toc:begin -->
+- [`using-dot-claude`](#using-dot-claude)
+- [`launching-claude`](#launching-claude)
+- [`following-best-practices`](#following-best-practices)
+- [`using-llm-tasks`](#using-llm-tasks)
+- [`summarizing-sessions`](#summarizing-sessions)
+- [`claiming-authorship`](#claiming-authorship)
+- [`guarding-commits`](#guarding-commits)
+- [`running-improvement-loops`](#running-improvement-loops)
+- [`running-claude-in-a-vm`](#running-claude-in-a-vm)
+<!-- toc:end -->
+
 ## `using-dot-claude`
 
 Claude Code blocks writes under `.claude/` by default. With this skill installed, just ask:
