@@ -81,6 +81,14 @@ Running `./improvement/loop.sh` launches Claude repeatedly — one iteration at 
 
 The `using-llm-tasks` skill has a companion mode (`./task-loop.sh`) that drains the `llm-tasks/` queue under the same watchdog — ask "set up the task loop" to install it.
 
+## `running-claude-in-a-vm`
+
+Scaffolds a Tart-based macOS VM into the current repo with Claude Code and a small set of utilities preinstalled. Ask:
+
+> Set up Claude in a macOS VM here.
+
+An easy-vs-custom conversation picks defaults (or your answers to a handful of questions), then the installer copies scripts into `./claude-vm/`. Run `./setup.sh` once to install Tart and clone the macOS image, then `./run.sh` to boot the VM and open Screen Sharing. The in-VM provisioning step is idempotent, so re-runs only do what's still missing. Apple Silicon only.
+
 # Contributing
 
 `sorcery-dev` is a repo-internal companion plugin. Its single skill `adding-skills` is the checklist Claude walks when a contributor asks to "add a sorcery skill." It's installed alongside `sorcery` when you add this marketplace, but fires only on contributor intents — outside this repo it has no reason to trigger.

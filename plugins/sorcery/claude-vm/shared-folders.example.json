@@ -1,0 +1,23 @@
+[
+  {
+    "path": "~/Dev/HelloWorld",
+    "active": true,
+    "terminal": true
+  },
+  {
+    "path": "~/Dev/WidgetFactory",
+    "active": true,
+    "terminal": false
+  },
+  {
+    "path": "~/Dev/Tetris",
+    "active": false,
+    "terminal": false
+  },
+  {
+    "path": "~/Documents/Photos",
+    "guest": "~/Photos",
+    "active": true,
+    "terminal": false
+  }
+]
