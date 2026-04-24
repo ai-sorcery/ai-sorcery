@@ -10,6 +10,10 @@ It will get you set up with a macOS VM, help you follow software engineering bes
 /plugin marketplace update ai-sorcery
 ```
 
+And then use AI Sorcery.
+
+![AI Sorcery hero illustration](assets/images/ai-sorcery-banner.webp)
+
 # Examples
 
 <!-- toc:begin -->
