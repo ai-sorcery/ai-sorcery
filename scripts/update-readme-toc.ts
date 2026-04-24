@@ -10,22 +10,24 @@
 // on first run.
 //
 // Only runs when README.md is in the staged set — commits that touch
-// unrelated files don't drag in TOC regeneration.
+// unrelated files don't drag in TOC regeneration. Pass --force to bypass
+// the staged-set check (useful for manual verification).
 
 import { $ } from "bun";
 import path from "node:path";
 
+const force = process.argv.includes("--force");
 const repoRoot = (await $`git rev-parse --show-toplevel`.text()).trim();
 const readmePath = path.join(repoRoot, "README.md");
 const readmeRelPath = "README.md";
 
-// Bail if README.md isn't in the staged set. `--name-only` lists paths,
-// one per line; split and filter drops the trailing empty entry.
-const stagedPaths = (await $`git diff --cached --name-only --no-renames`.text())
-  .split("\n")
-  .filter(Boolean);
-if (!stagedPaths.includes(readmeRelPath)) {
-  process.exit(0);
+if (!force) {
+  const stagedPaths = (await $`git diff --cached --name-only --no-renames`.text())
+    .split("\n")
+    .filter(Boolean);
+  if (!stagedPaths.includes(readmeRelPath)) {
+    process.exit(0);
+  }
 }
 
 const original = await Bun.file(readmePath).text();
@@ -46,13 +48,22 @@ for (let i = examplesIdx + 1; i < lines.length; i++) {
   }
 }
 
-// Collect `## ` subheadings inside the section.
+// Collect `## ` subheadings inside the section, skipping anything that
+// sits inside a fenced code block.
 const entries: { heading: string; anchor: string }[] = [];
-for (let i = examplesIdx + 1; i < sectionEnd; i++) {
-  const match = lines[i].match(/^## (.+)$/);
-  if (match) {
-    const heading = match[1];
-    entries.push({ heading, anchor: slug(heading) });
+{
+  let inCodeFence = false;
+  for (let i = examplesIdx + 1; i < sectionEnd; i++) {
+    if (/^```/.test(lines[i])) {
+      inCodeFence = !inCodeFence;
+      continue;
+    }
+    if (inCodeFence) continue;
+    const match = lines[i].match(/^## (.+)$/);
+    if (match) {
+      const heading = match[1];
+      entries.push({ heading, anchor: slug(heading) });
+    }
   }
 }
 

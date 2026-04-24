@@ -6,9 +6,12 @@
 # pre-commit — delegate to scripts under scripts/. Each script keeps its
 # real logic reusable outside git (so they can be run by hand for
 # manual verification):
-#   - update-readme-toc.ts   keeps the Examples TOC in README.md in sync
+#   - sort-readme-examples.ts alphabetizes the Examples subsections
+#   - update-readme-toc.ts    keeps the Examples TOC in sync
 #   - bump-plugin-versions.ts bumps a plugin's patch version when its
 #                             contents actually changed in the staged set
+# sort-readme-examples runs before update-readme-toc so the TOC reflects
+# the sorted order.
 
 set -euo pipefail
 
@@ -19,5 +22,6 @@ if ! command -v bun >/dev/null 2>&1; then
     exit 1
 fi
 
+bun "$root/scripts/sort-readme-examples.ts"
 bun "$root/scripts/update-readme-toc.ts"
 exec bun "$root/scripts/bump-plugin-versions.ts"
