@@ -1,4 +1,6 @@
-AI Sorcery - be a magician with Claude Code.
+AI Sorcery is a Claude Code plugin with skills that handle setup and continuous improvement of AI-heavy code bases.
+
+It will get you set up with a macOS VM, help you follow software engineering best practices, and keep Claude running reliably.
 
 # Install & Update
 
@@ -28,7 +30,7 @@ Drops `./me.sh` at your repo root. Ask:
 
 > Install `me.sh` in this repo.
 
-Running `./me.sh` rewrites the last 5 commits so their author field is the current git user, preserving each commit's original author date. Commits already attributed to the user are no-ops, so re-runs are idempotent.
+Running `./me.sh` rewrites the last 5 commits so their author field is the current git user, preserving each commit's original author date. Commits already attributed to the user aren't changed.
 
 ## `following-best-practices`
 
@@ -65,7 +67,7 @@ Scaffolds a Tart-based macOS VM into the current repo with Claude Code and a sma
 
 > Set up Claude in a macOS VM here.
 
-An easy-vs-custom conversation picks defaults (or your answers to a handful of questions), then the installer copies scripts into `./claude-vm/`. Run `./setup.sh` once to install Tart and clone the macOS image, then `./run.sh` to boot the VM and open Screen Sharing. The in-VM provisioning step is idempotent, so re-runs only do what's still missing. Apple Silicon only.
+After you answer some setup questions, it copies scripts into `./claude-vm/`. Run `./setup.sh` once to install Tart and clone the macOS image, then `./run.sh` to boot the VM and open Screen Sharing. Apple Silicon only.
 
 ## `running-improvement-loops`
 
