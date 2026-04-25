@@ -77,12 +77,7 @@ Any version number that lives in a committed file (`package.json`, `pyproject.to
 Commit subjects follow `type(scope): subject`, enforced by a git `commit-msg` hook. Keeps the log scannable, makes `git log --grep` reliable, and unlocks release tooling that keys off the prefix (semantic-release, release-please, changesets).
 
 - **Check for:** a `commit-msg` hook (in `.githooks/` or wherever `core.hooksPath` points) that rejects malformed subjects. Skim the last 20 commit subjects — if prefixes drift (`fix:` vs `Fix:` vs `bugfix:` vs bare sentences), enforcement isn't in place.
-- **Seed task shape:**
-  - **Copy the validator into the repo.** Put the plugin's `conventional-commit-check.sh` into `.githooks/` — inlined inside `commit-msg` for a small hook, or as a sibling script the hook calls. **The hook must be self-contained: no path in it should resolve outside the repository.** A hook that `exec`'s `${CLAUDE_PLUGIN_ROOT}/...` silently no-ops on any clone without the plugin installed and rots on plugin version bump. The plugin's own repo is the one exception — pointing at the in-repo script is fine there because it's committed alongside the hook.
-  - **Activate the hooks directory via a setup script** (per the *Setup script, not setup instructions* practice). `core.hooksPath` is local git config, not inherited on clone, so a committed-but-dormant hook is a silent trap. Strongest: a `package.json` `prepare` script (`"prepare": "git config --get core.hooksPath >/dev/null 2>&1 || git config core.hooksPath .githooks"`) for JS/TS, or `pre-commit install` for Python — both run on dependency install. Fallback: a `scripts/setup.sh` referenced once in the README. A bare onboarding line in CONTRIBUTING is the last resort and rots fast.
-  - **Verify end-to-end.** Stage a trivial change, then run `git commit -m "bogus"` (must reject) and `git commit -m "chore: verify hook"` (must accept). Invoking the script directly on crafted message files isn't sufficient — it misses activation-path, execute-bit, and wrong-directory mistakes.
-  - Accepted types are overridable via the `CONVENTIONAL_TYPES` env var (comma-separated); merge / revert / fixup! / squash! subjects auto-pass.
-  - When reporting completion, state the per-clone activation step explicitly so fresh clones don't inherit the dormant-hook trap unnoticed.
+- **Seed task shape:** install via the sibling skill `guarding-commits`, which bundles the validator, wires the `commit-msg` hook, prints activation guidance for teammates, and covers end-to-end verification.
 
 ## 11. Parse, don't validate
 

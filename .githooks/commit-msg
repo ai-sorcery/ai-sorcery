@@ -19,7 +19,7 @@ root="$(git rev-parse --show-toplevel)"
 # script. Types match AGENTS.md § Axioms § 2 — add new types to both
 # places if the project grows.
 CONVENTIONAL_TYPES='feat,fix,refactor,docs,chore' \
-  "$root/plugins/sorcery/conventional-commit-check.sh" "$commit_msg_file"
+  "$root/plugins/sorcery/guarding-commits/conventional-commit-check.sh" "$commit_msg_file"
 
 # Project-specific: reject Co-Authored-By: Claude trailers. Human
 # co-authors are still fine.
