@@ -78,6 +78,18 @@ Then overwrite `<subdir>/config.sh` with the user's answers, using the plain Wri
 - **Scripts are copies, not symlinks.** Edits to the installed scripts are local to the repo; they don't propagate to other installs. If the plugin's canonical scripts change, re-run the installer — it skips files that already exist, so old versions stay unless the user removes them first.
 - **Not for running Claude instances in parallel on the same host.** Tart supports multiple VMs with different names, but each needs its own clone of the image and its own RAM / disk allocation.
 
+## Troubleshooting
+
+When something fails, these three diagnostics cover most cases:
+
+- **`tart run` exits silently or with `VZErrorDomain Code=1`.** Apple's framework hides the real error; pull it from the unified log:
+  ```bash
+  /usr/bin/log show --predicate 'processImagePath CONTAINS "Virtualization" OR subsystem CONTAINS "virtualization"' --last 30m --style compact | tail -60
+  ```
+  Look for `[com.apple.virtualization:breadcrumb]` lines and the last `com.apple.Virtualization.VirtualMachine` messages before the process exited.
+- **Bypass the wrapper to isolate tart vs. our scripts.** Run `tart run --vnc-experimental --dir <one-share> <VM_NAME>` directly. If that works, the problem is in `run.sh` / `vm-setup.sh`. Halve the `--dir` flag set to find a toxic share.
+- **`tart ip` can return a stale IP after the VM exits.** `run.sh`'s "VM is up at..." line is not proof of liveness — if `tart exec` immediately fails, check `tart list` (state should be `running`) and `ps aux | grep tart` for the actual VM process.
+
 ## Related skills
 
 Pair with the sibling skill `launching-claude` inside the VM once Claude Code is installed — it drops a `claude.sh` launcher with privacy-friendly defaults. The sibling skill `using-dot-claude` is not needed here since this skill doesn't touch `.claude/`.
