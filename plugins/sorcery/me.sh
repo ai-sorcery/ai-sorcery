@@ -8,11 +8,28 @@
 # current user are left untouched, so re-running the script is a no-op
 # on anything already attributed. If the branch has fewer commits than
 # `claim_count`, every commit on the branch is considered.
+#
+# Usage: me.sh [-N]
+#   -N: number of commits back from HEAD to consider (default: 5)
 
 set -euo pipefail
 
-# Number of commits back from HEAD to consider.
+# Number of commits back from HEAD to consider. Default 5; override with
+# `-N` (e.g., `./me.sh -6` claims the last 6 commits).
 claim_count=5
+if [ $# -gt 1 ]; then
+    echo "Usage: $(basename "$0") [-N]" >&2
+    exit 64
+fi
+if [ $# -eq 1 ]; then
+    if [[ "$1" =~ ^-[1-9][0-9]*$ ]]; then
+        claim_count="${1#-}"
+    else
+        echo "Usage: $(basename "$0") [-N]" >&2
+        echo "  N: number of commits back from HEAD (default: 5)" >&2
+        exit 64
+    fi
+fi
 target_ancestor="HEAD~$claim_count"
 
 # HEAD~N is invalid when the branch has fewer than N ancestors, which
