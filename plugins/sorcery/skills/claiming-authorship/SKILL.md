@@ -19,11 +19,20 @@ cp "${CLAUDE_PLUGIN_ROOT}/me.sh" ./me.sh && chmod +x ./me.sh
 
 `./me.sh` considers the last 5 commits on the current branch (or every commit if the branch is shorter), and for each whose author email doesn't already match the current git user, amends it to reset the author to the current user while preserving the original author date. Pass `-N` to override the count (`./me.sh -10` walks back 10 commits). Commits already attributed to the user pass through unchanged, so re-running is a no-op.
 
+Identity is normally read from `git var GIT_AUTHOR_IDENT` (the repo's `user.email` / `user.name` config, with git's login@hostname auto-derivation as the fallback). Override per-run with environment variables:
+
+```bash
+CLAIM_EMAIL=jane@doe.com CLAIM_NAME='Jane Doe' ./me.sh
+```
+
+`CLAIM_NAME` defaults to the local part of `CLAIM_EMAIL` if only the email is set. The override doesn't touch git config — the env vars are exported into the rebase only — so it's safe in throwaway environments (fresh clones without `user.email` set, scripted runs, scenarios where you want an alternate identity for one invocation). Without the env vars, the script's behavior is unchanged.
+
 Internally it's a `git rebase <upstream> --exec '<conditional amend>'`, where `<upstream>` is `HEAD~N` or `--root` depending on branch depth.
 
 ## Caveats
 
 - **Rewrites history.** Only safe on branches that aren't yet pushed (or only pushed to personal branches nobody else tracks). Don't run on shared branches.
 - **Default count is 5.** If the stretch you want to re-author is longer, pass `-N` (e.g., `./me.sh -10`). For an unknown depth, re-run instead — already-attributed commits no-op, so successive runs march the window back only as far as new unclaimed commits exist.
-- **`git var GIT_AUTHOR_IDENT` determines "me."** If the user's git config varies across repos (different email per repo), make sure `git config user.email` in the current repo already reflects the identity they want to claim as, before running. The script reads the config at rebase time; it won't prompt.
+- **Identity defaults to `git var GIT_AUTHOR_IDENT`.** That's git's effective user identity (`user.email` / `user.name` config, with login@hostname auto-derivation as the fallback). On a fresh clone with nothing configured, the auto-derived identity wins — set `user.email` first, or pass `CLAIM_EMAIL=...` per the env-var override above. The script reads identity at rebase time; it won't prompt.
+- **`CLAIM_EMAIL` is validated only for an `@`.** Anything with an at-sign is accepted; the script doesn't enforce a stricter email format. Pass nonsense and you'll get nonsense in the author column.
 - **Preserves author date, not committer date.** The committer date becomes the rewrite time — expected for any `git rebase`. If the user cares about committer date too, they'd need a different tool.
