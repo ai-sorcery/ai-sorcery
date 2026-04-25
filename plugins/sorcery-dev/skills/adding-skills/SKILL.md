@@ -83,6 +83,7 @@ Before committing:
 
 - Add a section to the root `README.md`'s Examples block matching the existing per-skill pattern — heading + `> Ask: ...` + a 2-3 line description of what the skill does.
 - If the work surfaced a new language-agnostic practice, add it to `following-best-practices/SKILL.md` (named entry, seed task shape included).
+- **Wire the new skill into the demo runbook.** Add an entry for it in `plugins/sorcery-dev/skills/demoing-sorcery/manifest.ts` — either `{ status: "covered" }` paired with a step in that skill's `SKILL.md` (run-order section, with narration / verification / benefit), or `{ status: "skipped", reason: "..." }` if it can't run in the demo environment. The pre-commit guard `check-skill-coverage.ts` will block the commit until this is done.
 
 ### Review and commit
 

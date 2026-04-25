@@ -118,7 +118,7 @@ Claude scaffolds `llm-tasks/`, consults `following-best-practices` for a seed ta
 
 # Contributing
 
-`sorcery-dev` is a repo-internal companion plugin. Its single skill `adding-skills` is the checklist Claude walks when a contributor asks to "add a sorcery skill." It's installed alongside `sorcery` when you add this marketplace, but fires only on contributor intents — outside this repo it has no reason to trigger.
+`sorcery-dev` is a repo-internal companion plugin. The `adding-skills` skill is the checklist Claude walks when a contributor asks to "add a sorcery skill." The `demoing-sorcery` skill is a screen-recordable runbook that exercises every public-facing sorcery skill end-to-end by building a small CLI from scratch. Both are installed alongside `sorcery` when you add this marketplace, but fire only on contributor intents — outside this repo, neither has reason to trigger.
 
 After cloning, run `bun install` once to activate the repo's git hooks (sets `core.hooksPath=.githooks`).
 
