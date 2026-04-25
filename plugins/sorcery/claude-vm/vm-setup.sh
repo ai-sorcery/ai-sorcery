@@ -262,9 +262,35 @@ merge_json(home / ".claude" / "settings.json", {
   tart exec "$VM_NAME" bash -c 'rm -f ~/Library/LaunchAgents/com.anthropic.claude.plist'
 fi
 
-# --- Configure Terminal tabs (only if there are active terminal entries) ---
-
 SHARED_FOLDERS_FILE="$SCRIPT_DIR/shared-folders.json"
+
+# --- Mount shared folders (before Terminal tabs auto-cd into them) ---
+# Each share has its own virtiofs tag (set via tag=<name> in run.sh).
+# Guest path defaults to mirroring the host path; entries may set `guest`
+# to override (e.g., for host paths that live outside ~/Dev).
+# Must run before setup-terminal-tabs.sh — that script opens Terminal
+# whose .zprofile cd's into these mount points.
+
+if [ -f "$SHARED_FOLDERS_FILE" ]; then
+  MOUNT_COUNT=0
+  while IFS=$'\t' read -r host_entry guest_entry; do
+    name="$(basename "$guest_entry")"
+    # Replace a leading ~ with a literal $HOME that the guest's bash will
+    # expand — avoids hardcoding the guest user's absolute path here.
+    vm_path="${guest_entry/#\~/\$HOME}"
+
+    tart exec "$VM_NAME" bash -c "mkdir -p \"$vm_path\""
+    if tart exec "$VM_NAME" bash -c "/sbin/mount_virtiofs \"$name\" \"$vm_path\"" 2>/dev/null; then
+      echo "Mounted: $name -> $guest_entry"
+      MOUNT_COUNT=$((MOUNT_COUNT + 1))
+    else
+      echo "Already mounted or skipped: $name"
+    fi
+  done < <(jq -r '.[] | select(.active) | "\(.path)\t\(.guest // .path)"' "$SHARED_FOLDERS_FILE")
+  echo "Shared folders mounted: $MOUNT_COUNT"
+fi
+
+# --- Configure Terminal tabs (only if there are active terminal entries) ---
 
 DEV_DIRS=()
 if [ -f "$SHARED_FOLDERS_FILE" ]; then
@@ -326,30 +352,6 @@ SWIFT
   /tmp/add_sidebar
   rm -f /tmp/add_sidebar /tmp/add_sidebar.swift
 '
-
-# --- Mount shared folders ---
-# Each share has its own virtiofs tag (set via tag=<name> in run.sh).
-# Guest path defaults to mirroring the host path; entries may set `guest`
-# to override (e.g., for host paths that live outside ~/Dev).
-
-if [ -f "$SHARED_FOLDERS_FILE" ]; then
-  MOUNT_COUNT=0
-  while IFS=$'\t' read -r host_entry guest_entry; do
-    name="$(basename "$guest_entry")"
-    # Replace a leading ~ with a literal $HOME that the guest's bash will
-    # expand — avoids hardcoding the guest user's absolute path here.
-    vm_path="${guest_entry/#\~/\$HOME}"
-
-    tart exec "$VM_NAME" bash -c "mkdir -p \"$vm_path\""
-    if tart exec "$VM_NAME" bash -c "/sbin/mount_virtiofs \"$name\" \"$vm_path\"" 2>/dev/null; then
-      echo "Mounted: $name -> $guest_entry"
-      MOUNT_COUNT=$((MOUNT_COUNT + 1))
-    else
-      echo "Already mounted or skipped: $name"
-    fi
-  done < <(jq -r '.[] | select(.active) | "\(.path)\t\(.guest // .path)"' "$SHARED_FOLDERS_FILE")
-  echo "Shared folders mounted: $MOUNT_COUNT"
-fi
 
 echo ""
 echo "VM setup complete."
