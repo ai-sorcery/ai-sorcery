@@ -20,6 +20,7 @@ And then use AI Sorcery.
 - [`claiming-authorship`](#claiming-authorship)
 - [`following-best-practices`](#following-best-practices)
 - [`guarding-commits`](#guarding-commits)
+- [`learning-new-tech`](#learning-new-tech)
 - [`launching-claude`](#launching-claude)
 - [`running-claude-in-a-vm`](#running-claude-in-a-vm)
 - [`running-improvement-loops`](#running-improvement-loops)
@@ -51,6 +52,14 @@ Installs a self-contained pre-commit hook that blocks any commit whose staged di
 > Set up a disallowed-terms commit guard in this repo.
 
 Useful for personal emails, obvious secret prefixes, and `DO NOT COMMIT` markers.
+
+## `learning-new-tech`
+
+A coaching workflow for learning a programming language, framework, or platform by doing. Ask:
+
+> I want to learn Rust.
+
+Claude scaffolds `learning/` with a flexible 10-15 milestone `OUTLINE.md`, a cross-session `NOTES.md`, and only the first lesson — `learning/01-<topic>/` with `README.md`, `start.sh`, and `score.sh`. The user types the code; subsequent invocations review the work, capture feedback, adapt the outline, and generate the next numbered lesson. Lessons are self-contained — no cross-lesson dependencies — and zero-padded for fast `cd 0<TAB>`.
 
 ## `launching-claude`
 
