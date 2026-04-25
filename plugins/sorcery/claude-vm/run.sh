@@ -29,6 +29,17 @@ if [ -f "$SHARED_FOLDERS_FILE" ]; then
   done < <(jq -r '.[] | select(.active) | "\(.path)\t\(.guest // .path)"' "$SHARED_FOLDERS_FILE")
 fi
 
+# Apple's Virtualization.framework rejects the VM config with VZErrorDomain
+# Code=1 once virtio-fs shares exceed 14. Fail early with a clear message
+# instead of letting tart crash at start.
+SHARE_COUNT=$(( ${#DIR_FLAGS[@]} / 2 ))
+MAX_SHARES=14
+if [ "$SHARE_COUNT" -gt "$MAX_SHARES" ]; then
+  echo "Error: $SHARE_COUNT shared folders requested, but Apple's Virtualization framework caps virtio-fs shares at $MAX_SHARES."
+  echo "Set \"active\": false on one or more entries in shared-folders.json."
+  exit 1
+fi
+
 if [ ${#DIR_FLAGS[@]} -gt 0 ]; then
   echo "Sharing folders:"
   for (( i=0; i < ${#DIR_FLAGS[@]}; i+=2 )); do
