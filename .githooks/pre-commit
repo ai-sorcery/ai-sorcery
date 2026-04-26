@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 ./.githooks/check-disallowed-terms.sh || exit 1  # guarding-commits-check
+./.githooks/check-no-python.sh || exit 1
 
 #
 # pre-commit — delegate to scripts under scripts/ and one sorcery-dev guard.

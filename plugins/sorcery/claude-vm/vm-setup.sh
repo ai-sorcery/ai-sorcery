@@ -258,27 +258,43 @@ if want_app claude-code; then
   # (only when the key is absent), so a user who disables the plugin or
   # switches permission modes inside the VM keeps that change across re-runs.
   echo "Seeding Claude Code default settings..."
-  tart exec "$VM_NAME" python3 -c '
-import json, pathlib
+  tart exec "$VM_NAME" osascript -l JavaScript -e '
+ObjC.import("Foundation");
 
-def set_defaults(path, defaults):
-    path.parent.mkdir(parents=True, exist_ok=True)
-    data = json.loads(path.read_text()) if path.exists() else {}
-    for key, value in defaults.items():
-        if isinstance(value, dict):
-            existing = data.setdefault(key, {})
-            for inner_key, inner_value in value.items():
-                existing.setdefault(inner_key, inner_value)
-        else:
-            data.setdefault(key, value)
-    path.write_text(json.dumps(data, indent=2) + "\n")
+function readFile(path) {
+  const ns = $.NSString.stringWithContentsOfFileEncodingError(path, $.NSUTF8StringEncoding, null);
+  return ns.isNil() ? null : ObjC.unwrap(ns);
+}
+function writeFile(path, contents) {
+  $(contents).writeToFileAtomicallyEncodingError(path, true, $.NSUTF8StringEncoding, null);
+}
+function mkdirP(path) {
+  $.NSFileManager.defaultManager.createDirectoryAtPathWithIntermediateDirectoriesAttributesError(path, true, $(), null);
+}
 
-home = pathlib.Path.home()
-set_defaults(home / ".claude" / "settings.json", {
-    "permissions": {"defaultMode": "bypassPermissions"},
-    "enabledPlugins": {"superpowers@claude-plugins-official": True},
-})
-' || { echo "Error: failed to seed ~/.claude/settings.json inside the VM. The python3 step writing the settings file did not succeed — check VM filesystem permissions and that python3 is available." >&2; exit 1; }
+const home = ObjC.unwrap($.NSHomeDirectory());
+const path = home + "/.claude/settings.json";
+const defaults = {
+  permissions: { defaultMode: "bypassPermissions" },
+  enabledPlugins: { "superpowers@claude-plugins-official": true },
+};
+
+mkdirP(home + "/.claude");
+const raw = readFile(path);
+const data = raw ? JSON.parse(raw) : {};
+for (const key of Object.keys(defaults)) {
+  const value = defaults[key];
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    if (!data[key] || typeof data[key] !== "object") data[key] = {};
+    for (const k of Object.keys(value)) {
+      if (!(k in data[key])) data[key][k] = value[k];
+    }
+  } else if (!(key in data)) {
+    data[key] = value;
+  }
+}
+writeFile(path, JSON.stringify(data, null, 2) + "\n");
+' || { echo "Error: failed to seed ~/.claude/settings.json inside the VM. The osascript step writing the settings file did not succeed — check VM filesystem permissions." >&2; exit 1; }
   tart exec "$VM_NAME" bash -c 'rm -f ~/Library/LaunchAgents/com.anthropic.claude.plist'
 fi
 
