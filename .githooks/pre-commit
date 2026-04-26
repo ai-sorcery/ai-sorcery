@@ -9,7 +9,7 @@
 #   - sort-readme-examples.ts alphabetizes the Examples subsections
 #   - update-readme-toc.ts    keeps the Examples TOC in sync
 #   - check-skill-coverage.ts blocks commits that add a public skill without
-#                             wiring it into the demoing-sorcery runbook —
+#                             wiring it into the demoing-sorcery-skills runbook —
 #                             lives under sorcery-dev but runs repo-wide so
 #                             the contract can't be bypassed
 #   - bump-plugin-versions.ts bumps a plugin's patch version when its
@@ -28,5 +28,5 @@ fi
 
 bun "$root/scripts/sort-readme-examples.ts"
 bun "$root/scripts/update-readme-toc.ts"
-bun "$root/plugins/sorcery-dev/skills/demoing-sorcery/check-skill-coverage.ts"
+bun "$root/plugins/sorcery-dev/skills/demoing-sorcery-skills/check-skill-coverage.ts"
 exec bun "$root/scripts/bump-plugin-versions.ts"

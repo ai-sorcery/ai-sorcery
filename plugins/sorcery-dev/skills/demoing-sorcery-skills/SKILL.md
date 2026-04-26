@@ -1,5 +1,5 @@
 ---
-name: demoing-sorcery
+name: demoing-sorcery-skills
 description: Use when the user wants to run a screen-recordable end-to-end walkthrough of every public-facing sorcery skill — typical phrasings "run the sorcery demo", "let's record the demo", "walk through every skill", "demo all the skills".
 ---
 
@@ -32,7 +32,7 @@ The full coverage list lives in `manifest.ts` next to this file. The pre-commit 
 Run from the **ai-sorcery repo root**:
 
 ```bash
-bun plugins/sorcery-dev/skills/demoing-sorcery/reset-workspace.ts
+bun plugins/sorcery-dev/skills/demoing-sorcery-skills/reset-workspace.ts
 ```
 
 That deletes `demo-workspace/`, recreates the snippet-box scenario, and seeds three Claude-Bot-authored commits.
@@ -345,7 +345,7 @@ Show the entry:
 
 ```bash
 grep -A2 'running-claude-in-a-vm' \
-  plugins/sorcery-dev/skills/demoing-sorcery/manifest.ts
+  plugins/sorcery-dev/skills/demoing-sorcery-skills/manifest.ts
 ```
 
 > "If you're recording from the host (outside the VM), this is the skill you'd run first — it's how you'd build the VM we're recording from now."

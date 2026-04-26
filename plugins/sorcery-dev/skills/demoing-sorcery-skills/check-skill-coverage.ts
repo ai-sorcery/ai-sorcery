@@ -4,7 +4,7 @@
 // `plugins/sorcery/skills/` is missing from `manifest.ts`, when a manifest
 // entry no longer has a matching skill directory, or when a `skipped` entry
 // has no reason. The intent is that adding a new public skill must come
-// with a corresponding step in the demoing-sorcery runbook (or an explicit
+// with a corresponding step in the demoing-sorcery-skills runbook (or an explicit
 // reason for skipping).
 //
 // Runs from the pre-commit hook. Pass --force to bypass the staged-set
@@ -19,9 +19,9 @@ const force = process.argv.includes("--force");
 
 const repoRoot = (await $`git rev-parse --show-toplevel`.text()).trim();
 const manifestRel =
-  "plugins/sorcery-dev/skills/demoing-sorcery/manifest.ts";
+  "plugins/sorcery-dev/skills/demoing-sorcery-skills/manifest.ts";
 const skillRel =
-  "plugins/sorcery-dev/skills/demoing-sorcery/SKILL.md";
+  "plugins/sorcery-dev/skills/demoing-sorcery-skills/SKILL.md";
 
 if (!force) {
   const staged = (await $`git diff --cached --name-only --no-renames`.text())
@@ -51,7 +51,7 @@ if (missing.length === 0 && stale.length === 0 && skippedWithoutReason.length ==
   process.exit(0);
 }
 
-console.error("check-skill-coverage: demoing-sorcery is out of sync.");
+console.error("check-skill-coverage: demoing-sorcery-skills is out of sync.");
 console.error("");
 
 if (missing.length > 0) {

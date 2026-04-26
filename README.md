@@ -20,8 +20,8 @@ And then use AI Sorcery.
 - [`claiming-authorship`](#claiming-authorship)
 - [`following-best-practices`](#following-best-practices)
 - [`guarding-commits`](#guarding-commits)
-- [`learning-new-tech`](#learning-new-tech)
 - [`launching-claude`](#launching-claude)
+- [`learning-new-tech`](#learning-new-tech)
 - [`running-claude-in-a-vm`](#running-claude-in-a-vm)
 - [`running-improvement-loops`](#running-improvement-loops)
 - [`summarizing-sessions`](#summarizing-sessions)
@@ -53,14 +53,6 @@ Installs a self-contained pre-commit hook that blocks any commit whose staged di
 
 Useful for personal emails, obvious secret prefixes, and `DO NOT COMMIT` markers.
 
-## `learning-new-tech`
-
-A coaching workflow for learning a programming language, framework, or platform by doing. Ask:
-
-> I want to learn Rust.
-
-Claude scaffolds `learning/` with a flexible 10-15 milestone `OUTLINE.md`, a cross-session `NOTES.md`, and only the first lesson — `learning/01-<topic>/` with `README.md`, `start.sh`, and `score.sh`. The user types the code; subsequent invocations review the work, capture feedback, adapt the outline, and generate the next numbered lesson. Lessons are self-contained — no cross-lesson dependencies — and zero-padded for fast `cd 0<TAB>`.
-
 ## `launching-claude`
 
 Drops a `claude.sh` at your repo root. Ask:
@@ -73,6 +65,14 @@ Run it with `./claude.sh`. It sets:
 - `--rc`
 - `--effort max`
 - `--model claude-opus-4-7`
+
+## `learning-new-tech`
+
+A coaching workflow for learning a programming language, framework, or platform by doing. Ask:
+
+> I want to learn Rust.
+
+Claude scaffolds `learning/` with a flexible 10-15 milestone `OUTLINE.md`, a cross-session `NOTES.md`, and only the first lesson — `learning/01-<topic>/` with `README.md`, `start.sh`, and `score.sh`. The user types the code; subsequent invocations review the work, capture feedback, adapt the outline, and generate the next numbered lesson. Lessons are self-contained — no cross-lesson dependencies — and zero-padded for fast `cd 0<TAB>`.
 
 ## `running-claude-in-a-vm`
 
@@ -118,7 +118,7 @@ Claude scaffolds `llm-tasks/`, consults `following-best-practices` for a seed ta
 
 # Contributing
 
-`sorcery-dev` is a repo-internal companion plugin. The `adding-skills` skill is the checklist Claude walks when a contributor asks to "add a sorcery skill." The `demoing-sorcery` skill is a screen-recordable runbook that exercises every public-facing sorcery skill end-to-end by building a small CLI from scratch. Both are installed alongside `sorcery` when you add this marketplace, but fire only on contributor intents — outside this repo, neither has reason to trigger.
+`sorcery-dev` is a repo-internal companion plugin. The `adding-skills` skill is the checklist Claude walks when a contributor asks to "add a sorcery skill." The `demoing-sorcery-skills` skill is a screen-recordable runbook that exercises every public-facing sorcery skill end-to-end by building a small CLI from scratch. Both are installed alongside `sorcery` when you add this marketplace, but fire only on contributor intents — outside this repo, neither has reason to trigger.
 
 After cloning, run `bun install` once to activate the repo's git hooks (sets `core.hooksPath=.githooks`).
 

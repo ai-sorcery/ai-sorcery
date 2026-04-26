@@ -2,7 +2,7 @@
 //
 // reset-workspace — wipe `<repo-root>/demo-workspace/` and re-seed it with a
 // tiny TypeScript "snippet-box" CLI scenario plus three Claude-Bot-authored
-// commits, ready for the demoing-sorcery walkthrough.
+// commits, ready for the demoing-sorcery-skills walkthrough.
 //
 // The workspace is intentionally skeletal — no README, no setup script, no
 // hooks — so `following-best-practices` finds genuine day-one gaps, and so

@@ -1,5 +1,5 @@
 //
-// Source of truth for which public-facing sorcery skills the demoing-sorcery
+// Source of truth for which public-facing sorcery skills the demoing-sorcery-skills
 // runbook covers. The pre-commit guard `check-skill-coverage.ts` reads this
 // list and refuses commits when a skill under `plugins/sorcery/skills/` is
 // neither covered nor explicitly skipped here.

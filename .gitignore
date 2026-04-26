@@ -9,5 +9,5 @@ llm-tasks/
 commit-disallowed-terms.txt
 docs/superpowers/
 
-# Sandbox for the demoing-sorcery meta-skill — wiped on every run
+# Sandbox for the demoing-sorcery-skills meta-skill — wiped on every run
 demo-workspace/

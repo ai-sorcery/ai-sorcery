@@ -1,4 +1,4 @@
-# demoing-sorcery
+# demoing-sorcery-skills
 
 A scripted walkthrough that exercises every public-facing sorcery skill in one screen-recordable narrative. Operates inside a gitignored `demo-workspace/` sandbox at the host repo root, wiped clean at the start of every run.
 
