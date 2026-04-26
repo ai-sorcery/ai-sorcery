@@ -130,7 +130,7 @@ install_sf_symbols() {
     curl -sSL -o "$DMG" "https://devimages-cdn.apple.com/design/resources/download/SF-Symbols-7.dmg"
     hdiutil attach "$DMG" -nobrowse
     sleep 2
-    VOLUME=$(ls -d /Volumes/SFSymbols* /Volumes/SF\ Symbols* 2>/dev/null | head -1)
+    VOLUME=$(find /Volumes -maxdepth 1 -mindepth 1 \( -name "SFSymbols*" -o -name "SF Symbols*" \) -print -quit 2>/dev/null)
     if [ -z "$VOLUME" ]; then
       echo "Error: SF Symbols volume not found after mounting." >&2
       rm -f "$DMG"
@@ -153,7 +153,12 @@ install_claude_code() {
   want_app claude-code || return 0
   if ! tart exec "$VM_NAME" brew list claude-code@latest &>/dev/null; then
     echo "Installing Claude Code CLI..."
-    tart exec "$VM_NAME" npm uninstall -g @anthropic-ai/claude-code 2>/dev/null || true
+    # The macos-tahoe-xcode image preinstalls the `claude-code` cask, which
+    # owns /opt/homebrew/bin/claude and conflicts with `claude-code@latest`.
+    # Remove it before installing the formula.
+    if tart exec "$VM_NAME" brew list --cask claude-code &>/dev/null; then
+      tart exec "$VM_NAME" brew uninstall --cask claude-code
+    fi
     tart exec "$VM_NAME" brew install claude-code@latest
   else
     # Sentinel lives under ~/.cache in the guest (not /tmp, which macOS

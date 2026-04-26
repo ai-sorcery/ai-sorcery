@@ -12,7 +12,7 @@ IMAGE="ghcr.io/cirruslabs/macos-tahoe-xcode:latest"
 
 VM_CPU=4
 VM_MEMORY_MB=8192
-VM_DISK_GB=100
+VM_DISK_GB=150
 VM_DISPLAY="1920x1080"
 
 # Apps to install inside the VM. Comment out the ones you don't want.

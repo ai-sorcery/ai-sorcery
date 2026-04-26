@@ -21,7 +21,7 @@ Run the plugin's installer from the root of the user's current repo:
 "${CLAUDE_PLUGIN_ROOT}/claude-vm/install-claude-vm.sh"
 ```
 
-The installer copies the bundled scripts into `./claude-vm/`, seeds `config.sh` with sensible defaults (VM name `claude-macos`, 4 CPU / 8 GB RAM / 100 GB disk, apps: Chrome, Claude Code, Obsidian, Sublime Text), and seeds an empty `shared-folders.json`. Tart's own storage default (`~/.tart`) is used — no config change needed.
+The installer copies the bundled scripts into `./claude-vm/`, seeds `config.sh` with sensible defaults (VM name `claude-macos`, 4 CPU / 8 GB RAM / 150 GB disk, apps: Chrome, Claude Code, Obsidian, Sublime Text), and seeds an empty `shared-folders.json`. Tart's own storage default (`~/.tart`) is used — no config change needed.
 
 Tell the user the next command to run:
 
@@ -64,7 +64,7 @@ Then overwrite `<subdir>/config.sh` with the user's answers, using the plain Wri
 | `IMAGE` | `ghcr.io/cirruslabs/macos-tahoe-xcode:latest` | Tart image to clone (includes Xcode) |
 | `VM_CPU` | `4` | vCPUs |
 | `VM_MEMORY_MB` | `8192` | RAM (MB) |
-| `VM_DISK_GB` | `100` | Disk (GB) |
+| `VM_DISK_GB` | `150` | Disk (GB) |
 | `VM_DISPLAY` | `1920x1080` | Resolution |
 | `APPS` | `(chrome claude-code obsidian sublime-text)` | In-VM apps to install |
 
