@@ -240,30 +240,45 @@ APPLESCRIPT
 echo "Configuring Dock..."
 "$SCRIPT_DIR/setup-dock.sh" "$VM_NAME"
 
-# --- Configure Claude Code to bypass permissions (only if it was installed) ---
+# --- Configure Claude Code: bypass permissions + install/enable superpowers
+# plugin (only if claude-code is in APPS) ---
 
 if want_app claude-code; then
-  echo "Configuring Claude Code to bypass permissions..."
+  # `marketplace add` and `plugin install` exit 0 on re-run ("already on
+  # disk" / "already installed"), so re-running the whole script is safe.
+  echo "Installing Claude superpowers plugin..."
+  tart exec "$VM_NAME" claude plugin marketplace add anthropics/claude-plugins-official \
+    || { echo "Error: 'claude plugin marketplace add anthropics/claude-plugins-official' failed inside the VM. Check VM network connectivity and that 'claude' is on PATH." >&2; exit 1; }
+  tart exec "$VM_NAME" claude plugin install superpowers@claude-plugins-official \
+    || { echo "Error: 'claude plugin install superpowers@claude-plugins-official' failed inside the VM. The marketplace add succeeded, but the install did not — check the VM's network access to the plugin source." >&2; exit 1; }
+
+  # `plugin install` only stages files on disk; the `enabledPlugins` toggle
+  # below is what actually loads the plugin at session start. Both this
+  # toggle and `permissions.defaultMode` are written as first-run defaults
+  # (only when the key is absent), so a user who disables the plugin or
+  # switches permission modes inside the VM keeps that change across re-runs.
+  echo "Seeding Claude Code default settings..."
   tart exec "$VM_NAME" python3 -c '
 import json, pathlib
 
-def merge_json(path, updates):
+def set_defaults(path, defaults):
     path.parent.mkdir(parents=True, exist_ok=True)
-    data = {}
-    if path.exists():
-        data = json.loads(path.read_text())
-    for key, value in updates.items():
+    data = json.loads(path.read_text()) if path.exists() else {}
+    for key, value in defaults.items():
         if isinstance(value, dict):
-            data.setdefault(key, {}).update(value)
+            existing = data.setdefault(key, {})
+            for inner_key, inner_value in value.items():
+                existing.setdefault(inner_key, inner_value)
         else:
-            data[key] = value
+            data.setdefault(key, value)
     path.write_text(json.dumps(data, indent=2) + "\n")
 
 home = pathlib.Path.home()
-merge_json(home / ".claude" / "settings.json", {
+set_defaults(home / ".claude" / "settings.json", {
     "permissions": {"defaultMode": "bypassPermissions"},
+    "enabledPlugins": {"superpowers@claude-plugins-official": True},
 })
-'
+' || { echo "Error: failed to seed ~/.claude/settings.json inside the VM. The python3 step writing the settings file did not succeed — check VM filesystem permissions and that python3 is available." >&2; exit 1; }
   tart exec "$VM_NAME" bash -c 'rm -f ~/Library/LaunchAgents/com.anthropic.claude.plist'
 fi
 
