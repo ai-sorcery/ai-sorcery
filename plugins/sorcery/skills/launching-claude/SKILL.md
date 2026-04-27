@@ -32,6 +32,24 @@ exec env IS_DEMO=1 claude --rc --effort max --model claude-opus-4-7 "$@"
 
 Extra arguments pass through, so the launcher is a drop-in for `claude`: `./claude.sh -c`, `./claude.sh "do the thing"`, `./claude.sh --worktree`, etc.
 
+## Plugin auto-update
+
+The launcher refreshes marketplace-installed plugins before exec'ing claude, throttled to at most once per hour via `~/.claude/.last-plugin-update`. Updates run *before* the `exec`, so they take effect on this same launch (the exec is the "restart required to apply" the `claude plugin update` help text mentions).
+
+Coverage:
+
+- **User-scope plugins** (the default install scope) — always updated.
+- **Project-scope plugins** for the project the launcher was invoked from — updated only when `jq` is installed (used to filter out other projects' installs from `claude plugin list`). Without `jq`, the launcher silently falls back to user-scope-only via the human-readable list parser.
+- **`--plugin-dir` locals are NOT touched.** Claude Code reads those from disk at every launch, so they're current with whatever the filesystem holds. Refresh them via `git pull` in your normal flow, or use `/reload-plugins` mid-session.
+
+Force a refresh on the next launch:
+
+```bash
+rm ~/.claude/.last-plugin-update
+```
+
+To change the throttle window, edit `THROTTLE_SECONDS` in the installed `./claude.sh` (default: `$((60 * 60))`).
+
 ## Caveats
 
 - `IS_DEMO` is undocumented. A future Claude Code release could rename or remove it, and the launcher will silently stop hiding the banner until the script is updated.
@@ -39,3 +57,5 @@ Extra arguments pass through, so the launcher is a drop-in for `claude`: `./clau
 - `--effort max` is token-expensive — for routine work on a metered plan, prefer `high`.
 - Do not run `./claude.sh` from inside an active Claude Code session; nesting `claude` is not supported.
 - The repo-local copy does **not** auto-update when the plugin's canonical launcher changes. If the template gets updated, re-run the skill to re-copy.
+- The plugin auto-update is best-effort and silent on failure (network blip, marketplace unreachable, scope mismatch). Watch the launcher's stderr if you suspect an update isn't landing.
+- Project-scope coverage requires `jq`. The fallback updates user-scope plugins only.
