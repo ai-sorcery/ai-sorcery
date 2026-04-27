@@ -135,3 +135,4 @@ A non-match prints a clear error showing the expected shape, the type list, and 
 
 - `following-best-practices` — catalogs both these guards (alongside other day-one practices) and points back here for installation.
 - `using-dot-claude` — sibling installer pattern for hooks that live under `.claude/`. Not used here because git hooks are under `.githooks/`, not `.claude/`.
+- `writing-commit-messages` — sibling concern. It enforces commit-message density and style (subject-only by default, hard caps on bullet count and length, no em dashes, no file paths). Install both for the full set of commit-time guards.

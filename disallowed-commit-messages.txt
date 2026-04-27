@@ -1,0 +1,17 @@
+# disallowed-commit-messages.txt — strings the commit-msg hook refuses to
+# accept anywhere in a commit message. The writing-commit-messages skill
+# reads this file. One string per line; lines starting with `#` are
+# comments. Match is case-insensitive substring.
+#
+# These conventional-commits scopes are too generic to communicate
+# meaningfully. Use a more specific scope (the skill name, the directory
+# being touched, etc.) or no scope at all.
+
+feat(sorcery)
+chore(sorcery-dev)
+docs(sorcery)
+fix(sorcery)
+refactor(sorcery)
+feat(root)
+feat(sorcery-dev)
+feat(hooks)

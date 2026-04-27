@@ -27,6 +27,7 @@ And then use AI Sorcery.
 - [`summarizing-sessions`](#summarizing-sessions)
 - [`using-dot-claude`](#using-dot-claude)
 - [`using-llm-tasks`](#using-llm-tasks)
+- [`writing-commit-messages`](#writing-commit-messages)
 <!-- toc:end -->
 
 ## `claiming-authorship`
@@ -115,6 +116,14 @@ A markdown-driven task workflow. Ask:
 > Set up an LLM task workflow for this repo.
 
 Claude scaffolds `llm-tasks/`, consults `following-best-practices` for a seed task, and drives the four-section lifecycle (Initial Understanding → Tentative Plan → Implementation → Completion Notes). Subsequent invocations handle `new`, `done`, and `clump` through a bundled script.
+
+## `writing-commit-messages`
+
+A ruleset for tight commit messages plus a `commit-msg` hook that enforces it. Ask:
+
+> Set up commit-message style enforcement for this repo.
+
+The hook blocks bodies over 3 bullets, bullets over 20 words, file paths or basenames in the body, and em dashes anywhere. The rule is "subject-only by default. If a fact deserves elaboration, it usually belongs as a code comment near the affected code."
 
 # Contributing
 

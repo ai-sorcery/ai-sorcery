@@ -31,4 +31,12 @@ export const SKILLS: DemoSkill[] = [
   { name: "summarizing-sessions",      status: "covered" },
   { name: "using-dot-claude",          status: "covered" },
   { name: "using-llm-tasks",           status: "covered" },
+  {
+    name: "writing-commit-messages",
+    status: "skipped",
+    reason:
+      "Exercised implicitly on every commit step throughout the runbook " +
+      "via the commit-msg hook the skill installs; no standalone walkthrough " +
+      "step adds value.",
+  },
 ];

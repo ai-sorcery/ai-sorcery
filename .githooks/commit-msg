@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 ./.githooks/check-disallowed-terms.sh --message "$1" || exit 1  # guarding-commits-check
+bun "$(git rev-parse --show-toplevel)/plugins/sorcery/check-commit-message.ts" "$1" || exit 1  # writing-commit-messages-check
 
 #
 # commit-msg — enforce conventional commits via the plugin's canonical
