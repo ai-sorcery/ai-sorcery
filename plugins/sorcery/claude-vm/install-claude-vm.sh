@@ -31,6 +31,7 @@ declare -a files=(
   "teardown.sh"
   "setup-dock.sh"
   "setup-terminal-tabs.sh"
+  "fix-cache.sh"
   "config.example.sh:config.sh"
   "shared-folders.example.json:shared-folders.json"
 )

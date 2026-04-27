@@ -89,6 +89,7 @@ When something fails, these three diagnostics cover most cases:
   Look for `[com.apple.virtualization:breadcrumb]` lines and the last `com.apple.Virtualization.VirtualMachine` messages before the process exited.
 - **Bypass the wrapper to isolate tart vs. our scripts.** Run `tart run --vnc-experimental --dir <one-share> <VM_NAME>` directly. If that works, the problem is in `run.sh` / `vm-setup.sh`. Halve the `--dir` flag set to find a toxic share.
 - **`tart ip` can return a stale IP after the VM exits.** `run.sh`'s "VM is up at..." line is not proof of liveness — if `tart exec` immediately fails, check `tart list` (state should be `running`) and `ps aux | grep tart` for the actual VM process.
+- **A directory created on the host post-VM-boot enumerates as empty in the guest** (`ls` empty, `bun fs.readdirSync` returns `[]`, writes inside fail with ENOENT, but `stat` on a known-named file inside still works). The kernel's directory-listing cache for that inode is stuck and no userspace operation flushes it. Run the bundled `fix-cache.sh` from inside the guest to umount + remount the share — this clears the cache without rebooting the VM. Note that any shell whose cwd was inside the path needs `cd .` after the remount to re-enter the live mount.
 
 ## Related skills
 
