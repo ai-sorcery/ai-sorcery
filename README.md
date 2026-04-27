@@ -17,6 +17,7 @@ And then use AI Sorcery.
 # Examples
 
 <!-- toc:begin -->
+- [`capturing-test-fixtures`](#capturing-test-fixtures)
 - [`claiming-authorship`](#claiming-authorship)
 - [`following-best-practices`](#following-best-practices)
 - [`guarding-commits`](#guarding-commits)
@@ -29,6 +30,14 @@ And then use AI Sorcery.
 - [`using-llm-tasks`](#using-llm-tasks)
 - [`writing-commit-messages`](#writing-commit-messages)
 <!-- toc:end -->
+
+## `capturing-test-fixtures`
+
+Captures real-world web pages as test fixtures with provenance. Ask:
+
+> Capture this page as a fixture under `tests/fixtures/products/listing`: https://example.com/products/123
+
+Drops three artifacts per fixture: the raw original (never modified after capture), a `.meta.json` companion (source URL, capture timestamp, capture method, notes), and a simplified version tests load fast. Simplification splits into a script-driven mechanical strip (always-safe noise removal) and an LLM-driven semantic trim (drop everything irrelevant to the specific test). Supports `--render` for JS-heavy pages via Playwright.
 
 ## `claiming-authorship`
 

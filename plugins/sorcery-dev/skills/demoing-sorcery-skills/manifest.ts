@@ -14,6 +14,7 @@ export type DemoSkill =
   | { name: string; status: "skipped"; reason: string };
 
 export const SKILLS: DemoSkill[] = [
+  { name: "capturing-test-fixtures",   status: "covered" },
   { name: "claiming-authorship",       status: "covered" },
   { name: "following-best-practices",  status: "covered" },
   { name: "guarding-commits",          status: "covered" },

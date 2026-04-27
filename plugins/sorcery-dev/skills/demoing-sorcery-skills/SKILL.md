@@ -17,7 +17,7 @@ Treat the user as silent and the audience as the screen capture. Narrate **befor
 
 All steps run inside `<repo-root>/demo-workspace/`, gitignored at the host repo root. `reset-workspace.ts` (sibling) wipes and reseeds it before every run with a skeleton TypeScript "snippet-box" CLI plus three Claude-Bot-authored commits. The skeleton deliberately lacks a README, setup scripts, observability, and committed progress state, so `following-best-practices` finds real gaps and `claiming-authorship` finds bot commits to rewrite. After the reset, `cd demo-workspace` and stay there for every step unless noted.
 
-**Cwd discipline.** Every code block in this runbook runs from inside `demo-workspace/`. The user may have launched Claude from the parent `ai-sorcery` repo root; the parent has its own `./me.sh` (a launcher delegate), its own real commit history, and its own `.claude/`, so any command resolving against the wrong cwd would mutate the *parent* tree — clobbering the launcher, committing into the plugin repo, or rebasing real commits. The fixed rule: after step 1 does `cd demo-workspace`, never leave; if `pwd` doesn't end in `/demo-workspace`, stop and `cd` back. Steps 6 and 10 include an explicit `[[ "$PWD" == */demo-workspace ]] || exit` guard before any history-rewriting operation, but that's belt-and-suspenders — the real defense is staying put.
+**Cwd discipline.** Every code block in this runbook runs from inside `demo-workspace/`. The user may have launched Claude from the parent `ai-sorcery` repo root; the parent has its own `./me.sh` (a launcher delegate), its own real commit history, and its own `.claude/`, so any command resolving against the wrong cwd would mutate the *parent* tree — clobbering the launcher, committing into the plugin repo, or rebasing real commits. The fixed rule: after step 1 does `cd demo-workspace`, never leave; if `pwd` doesn't end in `/demo-workspace`, stop and `cd` back. Steps 6 and 11 include an explicit `[[ "$PWD" == */demo-workspace ]] || exit` guard before any history-rewriting operation, but that's belt-and-suspenders — the real defense is staying put.
 
 ## Run order
 
@@ -310,7 +310,47 @@ Show the file tree on camera. Don't actually run `./start.sh` — completing a l
 
 > "Outline first, lessons one at a time. After the user finishes lesson 01, they come back — we review the work, capture feedback, adapt the outline, and generate lesson 02. Each lesson is self-contained, so the user can drop in to any of them cold."
 
-### 10. `claiming-authorship` — re-author the bot commits to a chosen identity
+### 10. `capturing-test-fixtures` — snapshot a real page for the parser tests
+
+> "Snippet-box's roadmap includes pulling code blocks out of real web pages — eventually the CLI grows an `add-from-url` subcommand. We won't write that parser today, but we will lay the test fixture for it. `capturing-test-fixtures` codifies how to capture, store, and simplify a real page so the future test stays fast and the source of truth survives."
+
+Pick a primary URL with fallbacks. The Wikipedia article on Bun makes a thematic fixture (snippet-box runs on Bun) and Wikipedia reliably serves clean HTML over plain `curl`. If the live site happens to be blocked, returns a 4xx, or hits a Cloudflare challenge during the recording, fall through to one of the backups in order — every modern site occasionally throws a transient error, so the demo carries spares:
+
+```bash
+"${CLAUDE_PLUGIN_ROOT}/fixtures/capture.sh" --strip \
+  --notes="Bun runtime article — nav, infobox, and code blocks; representative shape for the parser to skip / extract / preserve." \
+  https://en.wikipedia.org/wiki/Bun_(software) \
+  tests/fixtures/parser/bun-article
+```
+
+If that one trips, try the next:
+
+```bash
+# Fallback A — GNU's GPL page: well-structured static document, no JS
+"${CLAUDE_PLUGIN_ROOT}/fixtures/capture.sh" --strip \
+  --notes="Long-form static document with section headings — unrelated subject, representative HTML shape." \
+  https://www.gnu.org/licenses/gpl-3.0-standalone.html \
+  tests/fixtures/parser/gpl
+
+# Fallback B — example.com: tiny, permanent, useful as a sanity check
+"${CLAUDE_PLUGIN_ROOT}/fixtures/capture.sh" --strip \
+  --notes="Sanity-check fixture — trivial content, verifies the capture pipeline works at all." \
+  https://example.com/ \
+  tests/fixtures/parser/example
+```
+
+Verify the three artifacts that landed for whichever capture succeeded:
+
+```bash
+ls tests/fixtures/parser/ tests/fixtures/parser/originals/
+cat tests/fixtures/parser/originals/*.meta.json
+```
+
+You should see the raw original under `originals/`, the `.meta.json` companion (sourceUrl, capturedAt, captureMethod=curl, the Firefox UA, and the notes), and the mechanically stripped sibling tests would load.
+
+> "Mechanical strip done — scripts, styles, comments, link/meta tags gone. The semantic trim — the LLM pass that drops everything irrelevant to the specific test — happens when we actually write the parser test. We're laying foundations here, not finishing the parser."
+
+### 11. `claiming-authorship` — re-author the bot commits to a chosen identity
 
 > "The seed gave us three commits authored by `bot@anthropic.com`. `claiming-authorship` rewrites them under whatever identity we pass in — handy here because this VM has no git config of its own."
 
@@ -337,7 +377,7 @@ Show the after state with the same `git log` invocation. The author email column
 
 > "Fake identity for the recording — off-camera, you'd run `./me.sh` without env vars and claim under your real `user.email`. Either way, re-running is a no-op once a commit is already under the chosen identity."
 
-### 11. `running-claude-in-a-vm` — **skipped, with reason**
+### 12. `running-claude-in-a-vm` — **skipped, with reason**
 
 > "There's one public skill we won't demo: `running-claude-in-a-vm`. We're already inside a Tart VM right now, and Apple's Virtualization framework doesn't support nested virtualization, so a Tart-in-Tart attempt would just fail. The manifest records the skip with this reason; the pre-commit guard verifies the manifest stays in sync."
 
@@ -359,7 +399,7 @@ bun src/index.ts list
 git log --format="%h %ae %s" -8
 ```
 
-The CLI's entry point may still echo a stub depending on what the loop touched in step 8 — we built the *infrastructure* to develop snippet-box and the loop has already started filling pieces in. The git log shows commits attributed to the user (step 10), the bot's gone, the loop's two iterations are recorded as their own commits, and the pending `add-run-script` task is queued for the next loop iteration to pick up.
+The CLI's entry point may still echo a stub depending on what the loop touched in step 8 — we built the *infrastructure* to develop snippet-box and the loop has already started filling pieces in. The git log shows commits attributed to the user (step 11), the bot's gone, the loop's two iterations are recorded as their own commits, and the pending `add-run-script` task is queued for the next loop iteration to pick up.
 
 > "Snippet-box came in as a bot-authored stub. It leaves with a session greeter, guarded commit history, two unattended improvement iterations, fresh SessionEnd summaries from those iterations in `~/LLM_Summaries/`, a queued task, and a learning track. Each step earned its place."
 
