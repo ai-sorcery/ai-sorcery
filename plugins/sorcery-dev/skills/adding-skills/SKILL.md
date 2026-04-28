@@ -40,7 +40,7 @@ If the happy path doesn't fit in a paragraph, the scope isn't clear yet. Iterate
 - Shared scripts the skill calls:
   - Single file → flat at the plugin root (e.g. `plugins/sorcery/me.sh`).
   - Bundle of three or more related files → a subdir at the plugin root (e.g. `plugins/sorcery/loop/`).
-- Every script reference from `SKILL.md` uses `${CLAUDE_PLUGIN_ROOT}/...`.
+- Every script reference from `SKILL.md` uses `${CLAUDE_PLUGIN_ROOT}/...`. One carve-out: a skill in the sibling `sorcery-dev` plugin that needs to invoke a script from this plugin uses `${CLAUDE_PLUGIN_ROOT}/../sorcery/...` — both plugins live as siblings under the same marketplace install, so the relative reach is durable. (Direct `${CLAUDE_PLUGIN_ROOT}` would resolve to the *sorcery-dev* plugin root, which doesn't host the helper scripts.)
 - **Anything that writes or edits under `.claude/` MUST route through `${CLAUDE_PLUGIN_ROOT}/dot-claude.sh`** — never the native Write or Edit tools. If the new skill's installer touches `.claude/settings.json` or `.claude/hooks/...`, invoke the sibling skill `using-dot-claude` from the installer.
 
 ### Installer decision
