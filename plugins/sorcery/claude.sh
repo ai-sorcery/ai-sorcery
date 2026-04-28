@@ -4,6 +4,8 @@
 #   IS_DEMO=1                — hide email/org from the welcome banner
 #                              (undocumented Anthropic env var, v2.1.116;
 #                              also skips first-run onboarding prompts)
+#   SKIP_RC=1                — omit --rc so the remote-control URL stays
+#                              out of screen recordings (set by demo-claude.sh)
 #   --rc                     — hidden CLI flag
 #   --effort max             — deepest reasoning level
 #   --model claude-opus-4-7  — pin to Opus 4.7
@@ -65,4 +67,8 @@ if needs_update; then
   touch "$SENTINEL"
 fi
 
-exec env IS_DEMO=1 claude --rc --effort max --model claude-opus-4-7 "$@"
+if [[ "${SKIP_RC:-}" == "1" ]]; then
+  exec env IS_DEMO=1 claude --effort max --model claude-opus-4-7 "$@"
+else
+  exec env IS_DEMO=1 claude --rc --effort max --model claude-opus-4-7 "$@"
+fi
