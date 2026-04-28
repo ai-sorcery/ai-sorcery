@@ -143,7 +143,17 @@ case "$cmd" in
       if [[ -t 0 ]]; then
         default_template
       else
-        cat
+        # Read stdin once; if empty (e.g., invoked from a no-tty agent without
+        # a piped body), fall back to the template instead of an empty file.
+        # The `; printf X` / `${body%X}` pair preserves trailing newlines that
+        # $(...) would otherwise strip.
+        body="$(cat; printf X)"
+        body="${body%X}"
+        if [[ -z "$body" ]]; then
+          default_template
+        else
+          printf '%s' "$body"
+        fi
       fi
     } > "$file"
     echo "$file"
