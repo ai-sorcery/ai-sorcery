@@ -86,6 +86,10 @@ export CLAIM_EMAIL="$claim_email"
 # timestamps don't all collapse to "now". Commits already attributed
 # to the current user skip the amend and pass through unchanged.
 #
+# --allow-empty so the amend doesn't refuse on commits that were
+# intentionally empty (e.g. probe commits from commit-hook checks).
+# Without it, the rebase aborts mid-walk on the first empty commit.
+#
 # The --exec body is one line because git rebase rejects newlines in
 # exec commands; semicolons stand in for the if/then/fi separators.
-git rebase "$upstream" --exec 'if [ "$(git log -1 --format=%ae)" != "$CLAIM_EMAIL" ]; then git commit --amend --reset-author --date="$(git log -1 --format=%aI)" --no-edit; fi'
+git rebase "$upstream" --exec 'if [ "$(git log -1 --format=%ae)" != "$CLAIM_EMAIL" ]; then git commit --amend --allow-empty --reset-author --date="$(git log -1 --format=%aI)" --no-edit; fi'
