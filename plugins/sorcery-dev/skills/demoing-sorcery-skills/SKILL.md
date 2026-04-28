@@ -85,9 +85,9 @@ Confirm with `cat .claude/hooks/session-start.sh` and `cat .claude/settings.json
 
 > "We'll see this hook print `snippet-box · 0 snippets stored` when the demo resumes — both proof of the bypass and the first piece of snippet-box infrastructure landing."
 
-### 3. `launching-claude` — drop `./claude.sh` (with a demo-mode `--rc` strip)
+### 3. `launching-claude` — drop `./claude.sh` (with demo-mode edits)
 
-> "Next, the launcher: a one-file `./claude.sh` that pins the model, raises the effort, and hides the account banner. We'll install it, then make a single post-install edit so the recording is safe to share."
+> "Next, the launcher: a one-file `./claude.sh` that pins the model, raises the effort, and hides the account banner. We'll install it, then make two post-install edits so the recording is safe to share and sorcery actually loads in the new session."
 
 ```bash
 "${CLAUDE_PLUGIN_ROOT}/install-launcher.sh"
@@ -99,11 +99,19 @@ The canonical launcher includes a `--rc` flag that, if a viewer of the recording
 sed -i.bak '/^exec /s/ --rc//' claude.sh && rm claude.sh.bak
 ```
 
-Narrate the strip explicitly so the audience understands the why:
+The same launcher knows nothing about the parent ai-sorcery checkout — so a session opened under `./claude.sh` would run without the sorcery plugins loaded, and any subsequent `Skill: <name>` invocation would fail with `Unknown skill`. Inject `--plugin-dir` flags pointing at the parent repo's in-tree plugin copies:
 
-> "We're stripping `--rc` from this one copy because the rest of the demo will be on camera. The plugin's canonical `claude.sh` keeps it; this is a one-line edit to the local install."
+```bash
+sorcery_dir="$(cd ../plugins/sorcery && pwd)"
+sorcery_dev_dir="$(cd ../plugins/sorcery-dev && pwd)"
+sed -i.bak "s|^exec env IS_DEMO=1 claude|& --plugin-dir $sorcery_dir --plugin-dir $sorcery_dev_dir|" claude.sh && rm claude.sh.bak
+```
 
-Verify with `cat ./claude.sh` — show the `--effort max --model claude-opus-4-7` line with no `--rc` between `claude` and `--effort`. We won't run `./claude.sh` here (no nesting); the actual switchover happens after step 7.
+Narrate both edits explicitly so the audience understands the why:
+
+> "We're stripping `--rc` because the rest of the demo will be on camera, and we're injecting `--plugin-dir` so the new session loads the same sorcery plugins this session uses. The plugin's canonical `claude.sh` is unchanged; both are one-line edits to the local install."
+
+Verify with `cat ./claude.sh` — show the final `exec` line: no `--rc`, two `--plugin-dir` flags pointing at absolute paths, and the unchanged `--effort max --model claude-opus-4-7` tail. We won't run `./claude.sh` here (no nesting); the actual switchover happens after step 7.
 
 > "After the next few steps, we'll open a new Terminal tab and come back through `./claude.sh`. From that point on, snippet-box is a `./claude.sh` project. We don't exit the original session — Claude Code prints a resume-ID line on `/exit` that we don't want in the recording."
 
@@ -358,24 +366,41 @@ Show the before state:
 
 ```bash
 git log --format="%h %ae %s"
+git status
 ```
 
-The seed's three commits are still `bot@anthropic.com`. **Sanity-check cwd before going further** — the parent `ai-sorcery` repo also has a `me.sh` (it's a launcher delegate, different content). Copying over it from the wrong cwd, or running `./me.sh` from there, would rewrite ai-sorcery's real commit history:
+The seed's three commits are still `bot@anthropic.com`. The status read tells you whether the worktree is clean: by step 11 the loop iterations from step 8 may have left tracked-file changes uncommitted, and steps 9-10 will have added `learning/` and `tests/fixtures/parser/` as untracked trees. Untracked files don't block a rebase; modified tracked files do. If `git status` shows any `M` or ` D` lines, stash them before running `me.sh` (untracked stays alone):
+
+```bash
+git diff --quiet || git stash push -m 'pre-claim-authorship'
+```
+
+**Sanity-check cwd before going further** — the parent `ai-sorcery` repo also has a `me.sh` (it's a launcher delegate, different content). Copying over it from the wrong cwd, or running `./me.sh` from there, would rewrite ai-sorcery's real commit history:
 
 ```bash
 [[ "$PWD" == */demo-workspace ]] || { echo "abort: not in demo-workspace ($PWD)" >&2; exit 1; }
 ```
 
-Install snippet-box's own `./me.sh` and run it with a fake demo identity. The VM has no git config, so `CLAIM_EMAIL` / `CLAIM_NAME` give the script an identity to claim under without touching git config:
+Install snippet-box's own `./me.sh` and run it with a fake demo identity. By step 11 there are more than 5 commits between HEAD and the deepest bot commit (the loop's iteration commits plus step 6's probe commits live in between), so the default `-5` window would leave the deepest bot at the rebase upstream and untouched. Pass `-10` to walk back far enough that every bot commit lands inside the window — `me.sh` falls back to `--root` if the branch is shorter, so over-shooting is safe. The VM has no git config, so `CLAIM_EMAIL` / `CLAIM_NAME` give the script an identity to claim under without touching git config:
 
 ```bash
 cp "${CLAUDE_PLUGIN_ROOT}/me.sh" ./me.sh && chmod +x ./me.sh
-CLAIM_EMAIL=jane@doe.com CLAIM_NAME='Jane Doe' ./me.sh
+CLAIM_EMAIL=jane@doe.com CLAIM_NAME='Jane Doe' ./me.sh -10
 ```
 
-Show the after state with the same `git log` invocation. The author email column should read `jane@doe.com` for every previously-bot-authored commit. Author dates are preserved; only committer dates change (expected for a rebase).
+Show the after state with the same `git log` invocation. The author email column should read `jane@doe.com` for every previously-bot-authored commit. Author dates are preserved; only committer dates change (expected for a rebase). If you stashed earlier, restore the working tree:
+
+```bash
+git stash list | grep -q pre-claim-authorship && git stash pop
+```
 
 > "Fake identity for the recording — off-camera, you'd run `./me.sh` without env vars and claim under your real `user.email`. Either way, re-running is a no-op once a commit is already under the chosen identity."
+
+Finally, clear the resume marker so the next recording starts cleanly. `reset-workspace.ts` also wipes it on the next run, but a partial-then-resumed flow without a reset would otherwise re-enter step 8:
+
+```bash
+rm -f .demo-progress
+```
 
 ### 12. `running-claude-in-a-vm` — **skipped, with reason**
 
