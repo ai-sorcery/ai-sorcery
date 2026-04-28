@@ -29,7 +29,7 @@ CLAIM_EMAIL=jane@doe.com CLAIM_NAME='Jane Doe' ./me.sh
 
 `CLAIM_NAME` defaults to the local part of `CLAIM_EMAIL` if only the email is set. The override doesn't touch git config — the env vars are exported into the rebase only — so it's safe in throwaway environments (fresh clones without `user.email` set, scripted runs, scenarios where you want an alternate identity for one invocation). Without the env vars, the script's behavior is unchanged.
 
-Internally it's a `git rebase <upstream> --exec '<conditional amend>'`, where `<upstream>` is `HEAD~N` or `--root` depending on branch depth.
+Internally it's a `git rebase <upstream> --exec '<conditional amend>'`, where `<upstream>` is `HEAD~N` or `--root` depending on branch depth. The `--exec` body passes `--no-verify` to each `git commit --amend` so pre-commit and commit-msg hooks don't fire during the rebase. The amend is metadata-only by design — re-running content-modifying hooks (e.g. a version bumper) on already-committed trees serves no purpose and risks pushing the rebased chain out of sync with later commits' expectations.
 
 ## Caveats
 

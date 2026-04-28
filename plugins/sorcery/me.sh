@@ -103,6 +103,14 @@ export CLAIM_EMAIL="$claim_email"
 # that were intentionally empty (e.g. probe commits from commit-hook
 # checks); without it the rebase aborts mid-walk.
 #
+# --no-verify skips pre-commit and commit-msg hooks for the amend.
+# This is the one place in the repo where bypassing hooks is the
+# correct thing to do: the amend is metadata-only by design (re-stamp
+# author / committer / dates, no content change), so any hook that
+# mutates files (e.g. bump-plugin-versions.ts) would push the rebased
+# chain out of sync with later commits' expectations and cause
+# cherry-pick conflicts down the line.
+#
 # The --exec body is one line because git rebase rejects newlines in
 # exec commands; semicolons stand in for the if/then/fi separators.
-git rebase "$upstream" --exec 'a=$(git log -1 --format=%ae); c=$(git log -1 --format=%ce); d=$(git log -1 --format=%aI); if [ "$a" != "$CLAIM_EMAIL" ]; then git commit --amend --allow-empty --reset-author --date="$d" --no-edit; elif [ "$c" != "$CLAIM_EMAIL" ]; then git commit --amend --allow-empty --date="$d" --no-edit; fi'
+git rebase "$upstream" --exec 'a=$(git log -1 --format=%ae); c=$(git log -1 --format=%ce); d=$(git log -1 --format=%aI); if [ "$a" != "$CLAIM_EMAIL" ]; then git commit --amend --no-verify --allow-empty --reset-author --date="$d" --no-edit; elif [ "$c" != "$CLAIM_EMAIL" ]; then git commit --amend --no-verify --allow-empty --date="$d" --no-edit; fi'
