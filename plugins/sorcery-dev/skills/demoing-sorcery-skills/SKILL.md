@@ -97,25 +97,26 @@ Load the skill before exercising it — `Skill: sorcery:launching-claude`.
 "${CLAUDE_PLUGIN_ROOT}/../sorcery/install-launcher.sh"
 ```
 
-The canonical launcher includes a `--rc` flag that, if a viewer of the recording grabbed it, would let them attach to this recorded session. Strip it from the installed copy before going further. The `exec` lines that carry `--rc` are indented inside an `if`-block, so anchor-free substitution is the durable form — it works regardless of how the launcher's control flow is shaped now or in the future:
+The canonical launcher passes `--rc` by default; if a viewer of the recording grabbed that URL, they could attach to the recorded session. The launcher already exposes an opt-out: when `SKIP_RC=1`, it omits `--rc`. Inject the assignment into the installed copy so the no-rc branch is taken on every launch — this is more durable than substring-substituting `--rc` away (which would corrupt any future `--rc...` flag the launcher might gain):
 
 ```bash
-sed -i.bak 's| --rc||' claude.sh && rm claude.sh.bak
+{ head -1 claude.sh; echo 'SKIP_RC=1'; tail -n +2 claude.sh; } > claude.sh.new && mv claude.sh.new claude.sh
+chmod +x claude.sh
 ```
 
-The same launcher knows nothing about the parent ai-sorcery checkout — so a session opened under `./claude.sh` would run without the sorcery plugins loaded, and any subsequent `Skill: <name>` invocation would fail with `Unknown skill`. Inject `--plugin-dir` flags pointing at the parent repo's in-tree plugin copies:
+The same launcher knows nothing about the parent ai-sorcery checkout — so a session opened under `./claude.sh` would run without the sorcery plugins loaded, and any subsequent `Skill: <name>` invocation would fail with `Unknown skill`. Inject `--plugin-dir` flags pointing at the parent repo's in-tree plugin copies. The launcher's `exec` lines are indented inside an `if`-block, so the substitution is anchor-free — it'll match in either branch:
 
 ```bash
 sorcery_dir="$(cd ../plugins/sorcery && pwd)"
 sorcery_dev_dir="$(cd ../plugins/sorcery-dev && pwd)"
-sed -i.bak "s|^exec env IS_DEMO=1 claude|& --plugin-dir $sorcery_dir --plugin-dir $sorcery_dev_dir|" claude.sh && rm claude.sh.bak
+sed -i.bak "s|exec env IS_DEMO=1 claude|& --plugin-dir $sorcery_dir --plugin-dir $sorcery_dev_dir|" claude.sh && rm claude.sh.bak
 ```
 
 Narrate both edits explicitly so the audience understands the why:
 
-> "We're stripping `--rc` because the rest of the demo will be on camera, and we're injecting `--plugin-dir` so the new session loads the same sorcery plugins this session uses. The plugin's canonical `claude.sh` is unchanged; both are one-line edits to the local install."
+> "We're forcing `SKIP_RC=1` so the launcher omits `--rc` on every run, and we're injecting `--plugin-dir` so the new session loads the same sorcery plugins this session uses. The plugin's canonical `claude.sh` is unchanged; both are local edits."
 
-Verify with `cat ./claude.sh` — show the final `exec` line: no `--rc`, two `--plugin-dir` flags pointing at absolute paths, and the unchanged `--effort max --model claude-opus-4-7` tail. We won't run `./claude.sh` here (no nesting); the actual switchover happens after step 7.
+Verify with `cat ./claude.sh` — show the `SKIP_RC=1` line near the top, and confirm both `exec` lines carry the two `--plugin-dir` flags pointing at absolute paths plus the unchanged `--effort max --model claude-opus-4-7` tail. The launcher takes the `SKIP_RC=1` branch on every invocation, so the actual command line that runs is the no-`--rc` form. We won't run `./claude.sh` here (no nesting); the actual switchover happens after step 7.
 
 > "After the next few steps, we'll open a new Terminal tab and come back through `./claude.sh`. From that point on, snippet-box is a `./claude.sh` project. We don't exit the original session — Claude Code prints a resume-ID line on `/exit` that we don't want in the recording."
 
