@@ -54,10 +54,12 @@ Run tests first, then close out:
 ./improvement/timestamp.sh "post-tests"
 ./improvement/timestamp.sh "wrapping up"
 ./improvement/finish.sh "one-line summary" "detailed description of what changed and why"
-git add -A && git commit -m "improvement loop #<iter>: <persona-id> — <summary>"
+git add -A && git commit -m "feat(<persona-id>): <summary>"
 ```
 
 Only commit if tests passed. If they fail, fix them before finishing.
+
+The subject is conventional-commits shaped (`type(scope): subject`) so repos guarded by a `commit-msg` hook accept it without adaptation. Use `feat` for a behavioral change, `refactor` for a pure restructure, `test` when the persona only touched tests, `docs` for documentation-only work — match the type to what actually changed.
 
 **Tip:** Use `progress.sh` with file args throughout the session — `finish.sh` reads from state, so untracked files won't appear in the changelog.
 
