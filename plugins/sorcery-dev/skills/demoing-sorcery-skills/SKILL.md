@@ -49,10 +49,12 @@ cd demo-workspace
 
 > "Before any code lands, we want every Claude session opened in this repo to greet us with the snippet count — both as a useful signal and as proof the bypass works. Claude Code blocks direct writes under `.claude/`; `using-dot-claude` routes around it."
 
+Load the skill before exercising it — `Skill: sorcery:using-dot-claude` — so the viewer sees what it does before we use it.
+
 Write a SessionStart hook that reads `data/snippets.json`:
 
 ```bash
-cat <<'EOF' | "${CLAUDE_PLUGIN_ROOT}/dot-claude.sh" write .claude/hooks/session-start.sh
+cat <<'EOF' | "${CLAUDE_PLUGIN_ROOT}/../sorcery/dot-claude.sh" write .claude/hooks/session-start.sh
 #!/usr/bin/env bash
 # Greet the developer with snippet-box's stored count when a Claude session
 # opens in this repo. Tolerant of the data file not existing yet.
@@ -66,7 +68,7 @@ chmod +x .claude/hooks/session-start.sh
 Wire it into `.claude/settings.json` so it actually fires (also via `dot-claude.sh`, since direct writes are blocked):
 
 ```bash
-cat <<'EOF' | "${CLAUDE_PLUGIN_ROOT}/dot-claude.sh" write .claude/settings.json
+cat <<'EOF' | "${CLAUDE_PLUGIN_ROOT}/../sorcery/dot-claude.sh" write .claude/settings.json
 {
   "hooks": {
     "SessionStart": [
@@ -89,14 +91,16 @@ Confirm with `cat .claude/hooks/session-start.sh` and `cat .claude/settings.json
 
 > "Next, the launcher: a one-file `./claude.sh` that pins the model, raises the effort, and hides the account banner. We'll install it, then make two post-install edits so the recording is safe to share and sorcery actually loads in the new session."
 
+Load the skill before exercising it — `Skill: sorcery:launching-claude`.
+
 ```bash
-"${CLAUDE_PLUGIN_ROOT}/install-launcher.sh"
+"${CLAUDE_PLUGIN_ROOT}/../sorcery/install-launcher.sh"
 ```
 
-The canonical launcher includes a `--rc` flag that, if a viewer of the recording grabbed it, would let them attach to this recorded session. Strip it from the installed copy before going further:
+The canonical launcher includes a `--rc` flag that, if a viewer of the recording grabbed it, would let them attach to this recorded session. Strip it from the installed copy before going further. The `exec` lines that carry `--rc` are indented inside an `if`-block, so anchor-free substitution is the durable form — it works regardless of how the launcher's control flow is shaped now or in the future:
 
 ```bash
-sed -i.bak '/^exec /s/ --rc//' claude.sh && rm claude.sh.bak
+sed -i.bak 's| --rc||' claude.sh && rm claude.sh.bak
 ```
 
 The same launcher knows nothing about the parent ai-sorcery checkout — so a session opened under `./claude.sh` would run without the sorcery plugins loaded, and any subsequent `Skill: <name>` invocation would fail with `Unknown skill`. Inject `--plugin-dir` flags pointing at the parent repo's in-tree plugin copies:
@@ -119,7 +123,7 @@ Verify with `cat ./claude.sh` — show the final `exec` line: no `--rc`, two `--
 
 > "The snippet-box repo is skeletal. `following-best-practices` will find what's missing."
 
-Invoke the skill (`Skill: following-best-practices`) with the cwd inside `demo-workspace/`. Let it produce its top one or two ranked gaps — given the seed, it should call out at minimum the missing README and the missing starter scripts.
+Invoke the skill — `Skill: sorcery:following-best-practices` — with the cwd inside `demo-workspace/`. Let it produce its top one or two ranked gaps — given the seed, it should call out at minimum the missing README and the missing starter scripts.
 
 Capture the top gap verbatim — step 5 (`using-llm-tasks`) seeds its first task from this same output, so the two steps compose.
 
@@ -129,24 +133,26 @@ Capture the top gap verbatim — step 5 (`using-llm-tasks`) seeds its first task
 
 > "Tasks live as markdown files in `llm-tasks/`. First invocation in a fresh repo scaffolds the directory and seeds task #1 from the gap we just found."
 
+Load the skill before exercising it — `Skill: sorcery:using-llm-tasks`.
+
 Use the script directly so the viewer sees the file appear:
 
 ```bash
-"${CLAUDE_PLUGIN_ROOT}/llm-tasks.sh" new install-readme  # body via stdin matching step-4 output
+"${CLAUDE_PLUGIN_ROOT}/../sorcery/llm-tasks.sh" new install-readme  # body via stdin matching step-4 output
 ```
 
 Stub the four sections (Initial Understanding, Tentative Plan, Implementation, Completion Notes) using a one-paragraph adaptation of the seed shape. Then add a second task (`add-run-script`) to show batch behavior:
 
 ```bash
-"${CLAUDE_PLUGIN_ROOT}/llm-tasks.sh" new add-run-script
+"${CLAUDE_PLUGIN_ROOT}/../sorcery/llm-tasks.sh" new add-run-script
 ```
 
 Walk one task through to done — fill the sections, then:
 
 ```bash
-"${CLAUDE_PLUGIN_ROOT}/llm-tasks.sh" done install-readme
-"${CLAUDE_PLUGIN_ROOT}/llm-tasks.sh" list
-"${CLAUDE_PLUGIN_ROOT}/llm-tasks.sh" clump
+"${CLAUDE_PLUGIN_ROOT}/../sorcery/llm-tasks.sh" done install-readme
+"${CLAUDE_PLUGIN_ROOT}/../sorcery/llm-tasks.sh" list
+"${CLAUDE_PLUGIN_ROOT}/../sorcery/llm-tasks.sh" clump
 ```
 
 Verify with `ls llm-tasks/ llm-tasks/completed/` — show `add-run-script.md` still pending and `install-readme.md` archived under a batch directory.
@@ -157,9 +163,11 @@ Verify with `ls llm-tasks/ llm-tasks/completed/` — show `add-run-script.md` st
 
 > "The skill ships two independent commit guards — one blocks strings from a gitignored allow-list, the other enforces conventional-commits subjects. Install both, demo both."
 
+Load the skill before exercising it — `Skill: sorcery:guarding-commits`.
+
 ```bash
-"${CLAUDE_PLUGIN_ROOT}/guarding-commits/install-guarding-commits.sh"
-"${CLAUDE_PLUGIN_ROOT}/guarding-commits/install-conventional-commits.sh"
+"${CLAUDE_PLUGIN_ROOT}/../sorcery/guarding-commits/install-guarding-commits.sh"
+"${CLAUDE_PLUGIN_ROOT}/../sorcery/guarding-commits/install-conventional-commits.sh"
 ```
 
 Both wire into `.githooks/commit-msg` with marker comments, so the order of installs doesn't matter and re-running either is a no-op.
@@ -205,20 +213,31 @@ git commit --allow-empty -m "chore: prove the conventional check accepts conform
 
 Verify with `git log -2 --format='%h %s'` — the two clean commits landed; the rejected attempts left no trace.
 
-> "End-to-end: two guards installed, both rejection paths demonstrated, both clean paths landed. The terms file stays out of git so each dev keeps their own list; conventional-commits applies uniformly."
+#### Land the install as its own commit
+
+The hook scripts and the `.gitignore` line for the terms file are still uncommitted at this point. Land them now, before step 8 — otherwise step 8's loop install will pile on top, and step 8's commit will accidentally carry the guard scaffolding too:
+
+```bash
+git add .githooks/ .gitignore
+git commit -m "chore: install commit guards"
+```
+
+> "End-to-end: two guards installed, both rejection paths demonstrated, both clean paths landed, install committed. The terms file stays out of git so each dev keeps their own list; conventional-commits applies uniformly."
 
 ### 7. `summarizing-sessions` — install the SessionEnd summary hook
 
 > "The SessionEnd hook fires whenever a Claude session ends. We install it now; step 8's loop spawns its own Claude sessions that end programmatically, so we'll see summaries land as a side effect of the loop running — no on-camera `/exit` needed."
 
+Load the skill before exercising it — `Skill: sorcery:summarizing-sessions`.
+
 ```bash
-"${CLAUDE_PLUGIN_ROOT}/install-summary-hook.sh"
+"${CLAUDE_PLUGIN_ROOT}/../sorcery/install-summary-hook.sh"
 ```
 
 Verify the registration. The installer merges into the existing `.claude/settings.json` from step 2, so both `SessionStart` and `SessionEnd` should now be wired:
 
 ```bash
-"${CLAUDE_PLUGIN_ROOT}/dot-claude.sh" cat .claude/settings.json | jq '.hooks | keys'
+"${CLAUDE_PLUGIN_ROOT}/../sorcery/dot-claude.sh" cat .claude/settings.json | jq '.hooks | keys'
 ```
 
 Show both keys present, then drop a progress marker the resumed session will read:
@@ -240,14 +259,16 @@ The literal commands the viewer should see on screen:
 "resume the sorcery demo"
 ```
 
-Stop here. The skill picks up at step 8 on its next invocation by reading `.demo-progress`. The SessionEnd summary hook stays unfired for now — step 8's loop iterations will exercise it as they go.
+**Stop here. End the turn.** This stop is unconditional. Even if the user said "run the whole demo" / "run through the demo" / "do everything" up front, the tab swap is verification, not theater — narrating past it reduces step 8's intended verifications (the SessionStart hook firing in a fresh session, the `./claude.sh` exec line booting end-to-end with sorcery loaded) to mere narration, which is exactly the failure this stop exists to prevent. After writing `.demo-progress`, do not run any further commands and do not narrate past this point. The skill picks up at step 8 on its next invocation by reading `.demo-progress`. The SessionEnd summary hook stays unfired for now — step 8's loop iterations will exercise it as they go.
 
 ### 8. `running-improvement-loops` — install, run a couple iterations, see what landed
 
 > "The improvement loop runs Claude unattended, rotating through personas. Each iteration is usually a few minutes — fast enough to show two on camera, sped up in post."
 
+Load the skill before exercising it — `Skill: sorcery:running-improvement-loops`.
+
 ```bash
-"${CLAUDE_PLUGIN_ROOT}/loop/install-improvement-loop.sh"
+"${CLAUDE_PLUGIN_ROOT}/../sorcery/loop/install-improvement-loop.sh"
 ```
 
 That copies the loop scripts into `improvement/`, seeds empty `SUCCINCT-CHANGELOG.md` and `VERBOSE-CHANGELOG.md`, and wires the wrap-up hook into `.claude/settings.json`.
@@ -255,6 +276,16 @@ That copies the loop scripts into `improvement/`, seeds empty `SUCCINCT-CHANGELO
 Then adapt `improvement/personas.json` to the snippet-box scenario. The default four personas (test-strengthener, code-improver, checkin, wildcard) are general-purpose; for snippet-box add a domain-specialist persona ("storage-layer-improver") that focuses on the JSON-on-disk store. Edit the file directly with the `Read` and `Write` tools.
 
 Verify with `ls improvement/` and `jq '.[] | .name' improvement/personas.json`.
+
+#### Land the loop infra as its own commit
+
+`improvement/finish.sh` runs `git add -A` at the end of every iteration, so anything still uncommitted when the loop starts gets folded into the first iteration's commit. Land the loop scaffolding now to keep iteration commits clean. Step 6 already committed the guards, so this commit only carries the loop's own files:
+
+```bash
+git status                                     # double-check nothing else is pending
+git add improvement/ .claude/settings.json
+git commit -m "chore(loop): install improvement loop"
+```
 
 #### Pause — let the loop run
 
@@ -301,7 +332,7 @@ To stay inside the 2-3 minute per-step budget, give the skill a fully-formed pro
 
 > "Set up a Bun learning plan. I've used Node before, including npm, async/await, and basic TypeScript. Skip the JavaScript-from-scratch material. Goal: a small CLI."
 
-Invoke the skill (`Skill: learning-new-tech`) with that ask. The skill scaffolds:
+Invoke the skill — `Skill: sorcery:learning-new-tech` — with that ask. The skill scaffolds:
 
 - `learning/OUTLINE.md` — 10-15 milestones, skipping the JS-from-scratch range per the user's stated background.
 - `learning/NOTES.md` — seeded with the Node-experience answer.
@@ -322,10 +353,12 @@ Show the file tree on camera. Don't actually run `./start.sh` — completing a l
 
 > "Snippet-box's roadmap includes pulling code blocks out of real web pages — eventually the CLI grows an `add-from-url` subcommand. We won't write that parser today, but we will lay the test fixture for it. `capturing-test-fixtures` codifies how to capture, store, and simplify a real page so the future test stays fast and the source of truth survives."
 
+Load the skill before exercising it — `Skill: sorcery:capturing-test-fixtures`.
+
 Pick a primary URL with fallbacks. The Wikipedia article on Bun makes a thematic fixture (snippet-box runs on Bun) and Wikipedia reliably serves clean HTML over plain `curl`. If the live site happens to be blocked, returns a 4xx, or hits a Cloudflare challenge during the recording, fall through to one of the backups in order — every modern site occasionally throws a transient error, so the demo carries spares:
 
 ```bash
-"${CLAUDE_PLUGIN_ROOT}/fixtures/capture.sh" --strip \
+"${CLAUDE_PLUGIN_ROOT}/../sorcery/fixtures/capture.sh" --strip \
   --notes="Bun runtime article — nav, infobox, and code blocks; representative shape for the parser to skip / extract / preserve." \
   https://en.wikipedia.org/wiki/Bun_(software) \
   tests/fixtures/parser/bun-article
@@ -335,13 +368,13 @@ If that one trips, try the next:
 
 ```bash
 # Fallback A — GNU's GPL page: well-structured static document, no JS
-"${CLAUDE_PLUGIN_ROOT}/fixtures/capture.sh" --strip \
+"${CLAUDE_PLUGIN_ROOT}/../sorcery/fixtures/capture.sh" --strip \
   --notes="Long-form static document with section headings — unrelated subject, representative HTML shape." \
   https://www.gnu.org/licenses/gpl-3.0-standalone.html \
   tests/fixtures/parser/gpl
 
 # Fallback B — example.com: tiny, permanent, useful as a sanity check
-"${CLAUDE_PLUGIN_ROOT}/fixtures/capture.sh" --strip \
+"${CLAUDE_PLUGIN_ROOT}/../sorcery/fixtures/capture.sh" --strip \
   --notes="Sanity-check fixture — trivial content, verifies the capture pipeline works at all." \
   https://example.com/ \
   tests/fixtures/parser/example
@@ -362,6 +395,8 @@ You should see the raw original under `originals/`, the `.meta.json` companion (
 
 > "The seed gave us three commits authored by `bot@anthropic.com`. `claiming-authorship` rewrites them under whatever identity we pass in — handy here because this VM has no git config of its own."
 
+Load the skill before exercising it — `Skill: sorcery:claiming-authorship`.
+
 Show the before state:
 
 ```bash
@@ -381,11 +416,11 @@ git diff --quiet || git stash push -m 'pre-claim-authorship'
 [[ "$PWD" == */demo-workspace ]] || { echo "abort: not in demo-workspace ($PWD)" >&2; exit 1; }
 ```
 
-Install snippet-box's own `./me.sh` and run it with a fake demo identity. By step 11 there are more than 5 commits between HEAD and the deepest bot commit (the loop's iteration commits plus step 6's probe commits live in between), so the default `-5` window would leave the deepest bot at the rebase upstream and untouched. Pass `-10` to walk back far enough that every bot commit lands inside the window — `me.sh` falls back to `--root` if the branch is shorter, so over-shooting is safe. The VM has no git config, so `CLAIM_EMAIL` / `CLAIM_NAME` give the script an identity to claim under without touching git config:
+Install snippet-box's own `./me.sh` and run it with a fake demo identity. **Always pass an explicit window flag here, never rely on the default.** By step 11 there are at least 6 commits between HEAD and the deepest bot commit (three seed commits + step-6 probes + step-8's loop infra commit + any iteration commits), and a future revision of this runbook may add more — so the default `-5` window would leave the deepest bot at the rebase upstream and untouched, silently. Pass `-15` to walk back well past every bot commit; `me.sh` falls back to `--root` if the branch is shorter, so over-shooting is always safe and under-shooting is what burns you. The VM has no git config, so `CLAIM_EMAIL` / `CLAIM_NAME` give the script an identity to claim under without touching git config:
 
 ```bash
-cp "${CLAUDE_PLUGIN_ROOT}/me.sh" ./me.sh && chmod +x ./me.sh
-CLAIM_EMAIL=jane@doe.com CLAIM_NAME='Jane Doe' ./me.sh -10
+cp "${CLAUDE_PLUGIN_ROOT}/../sorcery/me.sh" ./me.sh && chmod +x ./me.sh
+CLAIM_EMAIL=jane@doe.com CLAIM_NAME='Jane Doe' ./me.sh -15
 ```
 
 Show the after state with the same `git log` invocation. The author email column should read `jane@doe.com` for every previously-bot-authored commit. Author dates are preserved; only committer dates change (expected for a rebase). If you stashed earlier, restore the working tree:
