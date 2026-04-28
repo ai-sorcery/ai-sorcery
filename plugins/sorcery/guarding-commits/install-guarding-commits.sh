@@ -124,6 +124,25 @@ wire_hook "pre-commit" './.githooks/check-disallowed-terms.sh || exit 1'
 wire_hook "commit-msg" './.githooks/check-disallowed-terms.sh --message "$1" || exit 1'
 
 active_hooks_path="$(git -C "$repo_root" config --local --get core.hooksPath)"
+
+# Heads-up if the next commit will fall back to the host-autodetected identity.
+# Git's own warning ("Your name and email address were configured automatically
+# based on your username and hostname") fires per-commit; this fires once at
+# install time so the dev knows before they hit the first hooked commit.
+if ! git -C "$repo_root" config user.email >/dev/null 2>&1; then
+    cat >&2 <<'NUDGE'
+
+install: heads-up — git user.email is not set in this clone or globally.
+         The first commit you make will fall back to the host-autodetected
+         identity, producing a noisy git warning and attributing the commit
+         to a hostname-based stranger. Set it before committing:
+
+             git config user.email "you@example.com"
+             git config user.name  "Your Name"
+
+NUDGE
+fi
+
 cat <<EOF
 
 install: done.
