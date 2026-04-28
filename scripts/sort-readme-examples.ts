@@ -77,8 +77,11 @@ for (let k = 0; k < subheadingIndices.length; k++) {
   while (body.length > 1 && body[body.length - 1] === "") body.pop();
   body.push("");
   const heading = body[0];
-  const match = heading.match(/^## (?:`([^`]+)`|(.+))$/);
-  const key = (match?.[1] ?? match?.[2] ?? heading).toLowerCase();
+  // Unwrap a `[text](url)` linked heading before deriving the sort key,
+  // so subsections with heading-level links still sort by their name.
+  const unwrapped = heading.replace(/^(## )\[(.+?)\]\([^)]+\)$/, "$1$2");
+  const match = unwrapped.match(/^## (?:`([^`]+)`|(.+))$/);
+  const key = (match?.[1] ?? match?.[2] ?? unwrapped).toLowerCase();
   subsections.push({ key, body });
 }
 

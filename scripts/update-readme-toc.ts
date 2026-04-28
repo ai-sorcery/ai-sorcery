@@ -61,7 +61,11 @@ const entries: { heading: string; anchor: string }[] = [];
     if (inCodeFence) continue;
     const match = lines[i].match(/^## (.+)$/);
     if (match) {
-      const heading = match[1];
+      // Strip a wrapping `[text](url)` so the TOC entry shows only the
+      // displayed text and the anchor matches what GitHub generates for
+      // a linked heading (which is keyed off the visible text, not the URL).
+      const linkMatch = match[1].match(/^\[(.+?)\]\([^)]+\)$/);
+      const heading = linkMatch ? linkMatch[1] : match[1];
       entries.push({ heading, anchor: slug(heading) });
     }
   }

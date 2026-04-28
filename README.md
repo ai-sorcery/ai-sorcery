@@ -31,7 +31,7 @@ And then use AI Sorcery.
 - [`writing-commit-messages`](#writing-commit-messages)
 <!-- toc:end -->
 
-## `capturing-test-fixtures`
+## [`capturing-test-fixtures`](plugins/sorcery/skills/capturing-test-fixtures)
 
 Captures real-world web pages as test fixtures with provenance. Ask:
 
@@ -39,7 +39,7 @@ Captures real-world web pages as test fixtures with provenance. Ask:
 
 Drops three artifacts per fixture: the raw original (never modified after capture), a `.meta.json` companion (source URL, capture timestamp, capture method, notes), and a simplified version tests load fast. Simplification splits into a script-driven mechanical strip (always-safe noise removal) and an LLM-driven semantic trim (drop everything irrelevant to the specific test). Supports `--render` for JS-heavy pages via Playwright.
 
-## `claiming-authorship`
+## [`claiming-authorship`](plugins/sorcery/skills/claiming-authorship)
 
 Drops `./me.sh` at your repo root. Ask:
 
@@ -47,7 +47,7 @@ Drops `./me.sh` at your repo root. Ask:
 
 Running `./me.sh` rewrites the last 5 commits so their author field is the current git user, preserving each commit's original author date. Commits already attributed to the user aren't changed.
 
-## `following-best-practices`
+## [`following-best-practices`](plugins/sorcery/skills/following-best-practices)
 
 A catalog of language-agnostic practices that compound if installed day one. Ask:
 
@@ -55,7 +55,7 @@ A catalog of language-agnostic practices that compound if installed day one. Ask
 
 Claude scans against the list (README, starter scripts, observability, persisted test output, committed progress state, structured task workflow, wall-clock test ceiling, automated version bumps, conventional-commit enforcement, parse-don't-validate, transient-vs-permanent errors, cheap-before-expensive) and surfaces concrete gaps.
 
-## `guarding-commits`
+## [`guarding-commits`](plugins/sorcery/skills/guarding-commits)
 
 Installs a self-contained pre-commit hook that blocks any commit whose staged diff adds a line containing a string from a git-ignored `commit-disallowed-terms.txt`. Ask:
 
@@ -63,7 +63,7 @@ Installs a self-contained pre-commit hook that blocks any commit whose staged di
 
 Useful for personal emails, obvious secret prefixes, and `DO NOT COMMIT` markers.
 
-## `launching-claude`
+## [`launching-claude`](plugins/sorcery/skills/launching-claude)
 
 Drops a `claude.sh` at your repo root. Ask:
 
@@ -76,7 +76,7 @@ Run it with `./claude.sh`. It sets:
 - `--effort max`
 - `--model claude-opus-4-7`
 
-## `learning-new-tech`
+## [`learning-new-tech`](plugins/sorcery/skills/learning-new-tech)
 
 A coaching workflow for learning a programming language, framework, or platform by doing. Ask:
 
@@ -84,7 +84,7 @@ A coaching workflow for learning a programming language, framework, or platform 
 
 Claude scaffolds `learning/` with a flexible 10-15 milestone `OUTLINE.md`, a cross-session `NOTES.md`, and only the first lesson — `learning/01-<topic>/` with `README.md`, `start.sh`, and `score.sh`. The user types the code; subsequent invocations review the work, capture feedback, adapt the outline, and generate the next numbered lesson. Lessons are self-contained — no cross-lesson dependencies — and zero-padded for fast `cd 0<TAB>`.
 
-## `running-claude-in-a-vm`
+## [`running-claude-in-a-vm`](plugins/sorcery/skills/running-claude-in-a-vm)
 
 Scaffolds a Tart-based macOS VM into the current repo with Claude Code and a small set of utilities preinstalled. Ask:
 
@@ -92,7 +92,7 @@ Scaffolds a Tart-based macOS VM into the current repo with Claude Code and a sma
 
 After you answer some setup questions, it copies scripts into `./claude-vm/`. Run `./setup.sh` once to install Tart and clone the macOS image, then `./run.sh` to boot the VM and open Screen Sharing. Apple Silicon only.
 
-## `running-improvement-loops`
+## [`running-improvement-loops`](plugins/sorcery/skills/running-improvement-loops)
 
 Installs an autonomous improvement loop under `./improvement/`. Ask:
 
@@ -102,7 +102,7 @@ Running `./improvement/loop.sh` launches Claude repeatedly — one iteration at 
 
 The `using-llm-tasks` skill has a companion mode (`./task-loop.sh`) that drains the `llm-tasks/` queue under the same watchdog — ask "set up the task loop" to install it.
 
-## `summarizing-sessions`
+## [`summarizing-sessions`](plugins/sorcery/skills/summarizing-sessions)
 
 Wires a SessionEnd hook that drops a dated markdown summary of each session into `~/LLM_Summaries/YYYY-MM-DD/`. Ask:
 
@@ -110,7 +110,7 @@ Wires a SessionEnd hook that drops a dated markdown summary of each session into
 
 The hook self-forks into the background, skips subagent transcripts, and calls Haiku with a forced JSON schema so each summary is a parseable `{title, body}` pair. Point an Obsidian vault at `~/LLM_Summaries/` to read back the daily log with no extra tooling.
 
-## `using-dot-claude`
+## [`using-dot-claude`](plugins/sorcery/skills/using-dot-claude)
 
 Claude Code blocks writes under `.claude/` by default. With this skill installed, just ask:
 
@@ -118,7 +118,7 @@ Claude Code blocks writes under `.claude/` by default. With this skill installed
 
 The write gets routed through a bundled bash script and lands in place.
 
-## `using-llm-tasks`
+## [`using-llm-tasks`](plugins/sorcery/skills/using-llm-tasks)
 
 A markdown-driven task workflow. Ask:
 
@@ -126,7 +126,7 @@ A markdown-driven task workflow. Ask:
 
 Claude scaffolds `llm-tasks/`, consults `following-best-practices` for a seed task, and drives the four-section lifecycle (Initial Understanding → Tentative Plan → Implementation → Completion Notes). Subsequent invocations handle `new`, `done`, and `clump` through a bundled script.
 
-## `writing-commit-messages`
+## [`writing-commit-messages`](plugins/sorcery/skills/writing-commit-messages)
 
 A ruleset for tight commit messages plus a `commit-msg` hook that enforces it. Ask:
 
