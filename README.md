@@ -45,7 +45,7 @@ Drops `./me.sh` at your repo root. Ask:
 
 > Install `me.sh` in this repo.
 
-Running `./me.sh` rewrites the last 5 commits so their author field is the current git user, preserving each commit's original author date. Commits already attributed to the user aren't changed.
+Running `./me.sh` rewrites the last 5 commits so their author and committer fields are the current git user, preserving each commit's original author date. Commits where both fields already match aren't changed.
 
 ## [`following-best-practices`](plugins/sorcery/skills/following-best-practices)
 

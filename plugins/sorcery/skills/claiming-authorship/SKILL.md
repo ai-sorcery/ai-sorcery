@@ -1,6 +1,6 @@
 ---
 name: claiming-authorship
-description: Use when the user wants to install the `me.sh` script at the current repo's root so they can re-author recent commits to themselves after an agent made them. Drops an executable `./me.sh` at the repo root — running it rewrites the last few commits' author field to the current git user, preserving each commit's original author date and no-op'ing on anything already attributed.
+description: Use when the user wants to install the `me.sh` script at the current repo's root so they can re-author recent commits to themselves after an agent made them. Drops an executable `./me.sh` at the repo root — running it rewrites the last few commits' author and committer fields to the current git user, preserving each commit's original author date and no-op'ing on commits where both fields already match.
 ---
 
 # Claiming Authorship
@@ -17,7 +17,9 @@ cp "${CLAUDE_PLUGIN_ROOT}/me.sh" ./me.sh && chmod +x ./me.sh
 
 ## What the script does
 
-`./me.sh` considers the last 5 commits on the current branch (or every commit if the branch is shorter), and for each whose author email doesn't already match the current git user, amends it to reset the author to the current user while preserving the original author date. Pass `-N` to override the count (`./me.sh -10` walks back 10 commits). Commits already attributed to the user pass through unchanged, so re-running is a no-op.
+`./me.sh` considers the last 5 commits on the current branch (or every commit if the branch is shorter), and for each commit whose author or committer email doesn't already match the current git user, amends it so both fields read as the current user while preserving the original author date. Pass `-N` to override the count (`./me.sh -10` walks back 10 commits). Commits where both fields already match pass through unchanged, so re-running is a no-op.
+
+Why both fields: a commit amended elsewhere (e.g. inside a VM with a different git identity) keeps the original author but flips the committer to the VM's identity. github.com surfaces this as "by Alice, committed by Bob" — running me.sh on the host fixes the committer line.
 
 Identity is normally read from `git var GIT_AUTHOR_IDENT` (the repo's `user.email` / `user.name` config, with git's login@hostname auto-derivation as the fallback). Override per-run with environment variables:
 

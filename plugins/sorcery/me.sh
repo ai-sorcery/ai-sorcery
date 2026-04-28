@@ -2,12 +2,17 @@
 #
 # me.sh — claim authorship on the last N commits.
 #
-# Rewrites the last `claim_count` commits on the current branch so their
-# author field becomes the current git user, preserving each commit's
-# original author date. Commits whose author email already matches the
-# current user are left untouched, so re-running the script is a no-op
-# on anything already attributed. If the branch has fewer commits than
-# `claim_count`, every commit on the branch is considered.
+# Rewrites the last `claim_count` commits on the current branch so both
+# their author and committer fields become the current git user, preserving
+# each commit's original author date. Commits where both fields already
+# match the current user are left untouched, so re-running the script is
+# a no-op on anything already fully attributed. If the branch has fewer
+# commits than `claim_count`, every commit on the branch is considered.
+#
+# Why both fields: an amend done elsewhere (e.g. inside a VM with a
+# different git identity) keeps the original author but flips the
+# committer to the VM's identity. A pass that only checks author would
+# leave the committer field reading "Managed via Tart" on github.com.
 #
 # Usage: me.sh [-N]
 #   -N: number of commits back from HEAD to consider (default: 5)
@@ -81,15 +86,23 @@ fi
 # `git log -1` returns the commit currently under consideration.
 export CLAIM_EMAIL="$claim_email"
 
-# For commits not already under the current user, amend to reset the
-# author identity while preserving the original author date so
-# timestamps don't all collapse to "now". Commits already attributed
-# to the current user skip the amend and pass through unchanged.
+# For each commit walked by the rebase, decide what to fix based on
+# which fields don't already match the current user:
+#   - Author wrong: amend with --reset-author. That sets the author to
+#     the current committer identity, which itself comes from
+#     GIT_COMMITTER_* env vars or user.email/user.name — so the committer
+#     ends up correct in the same step.
+#   - Author right but committer wrong: amend without --reset-author.
+#     The author is preserved, and the amend re-stamps the committer
+#     using the same identity sources. This is the case that fixes
+#     commits previously amended inside a VM.
+#   - Both already right: skip the amend entirely so re-runs are no-ops.
 #
-# --allow-empty so the amend doesn't refuse on commits that were
-# intentionally empty (e.g. probe commits from commit-hook checks).
-# Without it, the rebase aborts mid-walk on the first empty commit.
+# --date preserves the original author date so timestamps don't all
+# collapse to "now". --allow-empty lets the amend succeed on commits
+# that were intentionally empty (e.g. probe commits from commit-hook
+# checks); without it the rebase aborts mid-walk.
 #
 # The --exec body is one line because git rebase rejects newlines in
 # exec commands; semicolons stand in for the if/then/fi separators.
-git rebase "$upstream" --exec 'if [ "$(git log -1 --format=%ae)" != "$CLAIM_EMAIL" ]; then git commit --amend --allow-empty --reset-author --date="$(git log -1 --format=%aI)" --no-edit; fi'
+git rebase "$upstream" --exec 'a=$(git log -1 --format=%ae); c=$(git log -1 --format=%ce); d=$(git log -1 --format=%aI); if [ "$a" != "$CLAIM_EMAIL" ]; then git commit --amend --allow-empty --reset-author --date="$d" --no-edit; elif [ "$c" != "$CLAIM_EMAIL" ]; then git commit --amend --allow-empty --date="$d" --no-edit; fi'
