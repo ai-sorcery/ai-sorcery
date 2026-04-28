@@ -1,14 +1,19 @@
 #!/usr/bin/env bash
 # Launch Claude Code with privacy-friendly defaults; extra args pass through.
 #
+# Defaults applied to every launch:
+#   --effort max             — deepest reasoning level
+#   --model claude-opus-4-7  — pin to Opus 4.7
+#   --rc                     — hidden CLI flag, on by default
+#                              (opt out by setting SKIP_RC=1; see below)
+#
+# Env-var inputs (callers set these; the launcher reads them):
 #   IS_DEMO=1                — hide email/org from the welcome banner
 #                              (undocumented Anthropic env var, v2.1.116;
 #                              also skips first-run onboarding prompts)
 #   SKIP_RC=1                — omit --rc so the remote-control URL stays
-#                              out of screen recordings (set by demo-claude.sh)
-#   --rc                     — hidden CLI flag
-#   --effort max             — deepest reasoning level
-#   --model claude-opus-4-7  — pin to Opus 4.7
+#                              out of screen recordings. demo-claude.sh
+#                              at the repo root is a wrapper that sets it.
 #
 # Auto-updates marketplace-installed plugins at most once per hour via a
 # sentinel at ~/.claude/.last-plugin-update. Updates fire BEFORE the exec so
