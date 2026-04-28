@@ -106,6 +106,26 @@ EOF
   copied=$(( copied + 1 ))
 fi
 
+# Seed a .gitignore for runtime files the loop scripts write per iteration.
+# Without this, finish.sh's `git add -A` sweeps them into the iteration commit
+# and they later show up as modified-deleted when loop.sh cleans them up at
+# the next iteration boundary.
+gitignore="$improvement_dir/.gitignore"
+if [[ ! -e "$gitignore" ]]; then
+  cat > "$gitignore" <<'EOF'
+# Runtime state written by the loop scripts; not part of the static
+# infrastructure. Each entry is created/cleared per iteration.
+.iteration-start
+.wrap-up-fired
+.state.json
+counter.txt
+IN-PROGRESS.md
+logs/
+EOF
+  echo "  seed: improvement/.gitignore"
+  copied=$(( copied + 1 ))
+fi
+
 # Wire the wrap-up hook into .claude/settings.json (PostToolUse, match "*").
 # The hook path is the installed copy (improvement/wrap-up-hook.sh), not the
 # plugin's — so the hook keeps working even if the plugin is uninstalled.
@@ -156,4 +176,11 @@ fi
 
 echo
 echo "[install-improvement-loop] done — $copied file(s) copied/seeded, $skipped already present."
-echo "Next: review improvement/personas.json (and tune for this repo), then run ./improvement/loop.sh."
+echo
+echo "Next:"
+echo "  1. Commit the loop infra now so the first iteration's commit isn't"
+echo "     bloated with these scaffold files (finish.sh runs git add -A):"
+echo "       git add improvement/ .claude/settings.json"
+echo "       git commit -m 'chore(loop): install improvement loop'"
+echo "  2. Review improvement/personas.json and tune for this repo."
+echo "  3. Run ./improvement/loop.sh."
