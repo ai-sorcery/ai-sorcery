@@ -50,7 +50,8 @@ format_duration() {
 }
 
 # Wait up to $1 seconds, prefixing the countdown with $2. Returns 1 if the
-# user asked to stop (q/s/h or stop.txt).
+# user asked to stop (q/s/h or stop.txt). Returns 0 if the wait completed
+# naturally OR the user pressed c/n to skip ahead to the next iteration.
 wait_for_next_loop() {
   local remaining=$1
   local label="$2"
@@ -78,6 +79,10 @@ wait_for_next_loop() {
       q|s|h)
         printf '\n%q detected, ending loop\n' "$key"
         return 1
+        ;;
+      c|n)
+        printf '\n%q detected, skipping wait\n' "$key"
+        return 0
         ;;
     esac
 
@@ -213,7 +218,7 @@ while true; do
     break
   fi
 
-  echo "Press q/s/h (or touch stop.txt) to end the loop."
+  echo "Press q/s/h to end the loop, or c/n to skip the wait. (Or touch stop.txt to end.)"
   if (( claude_rc != 0 )) || (( duration < LOOP_MIN_RUN )); then
     printf 'iteration failed (exit=%d, duration=%ds); waiting %ds before retry\n' \
       "$claude_rc" "$duration" "$LOOP_FAIL_WAIT"

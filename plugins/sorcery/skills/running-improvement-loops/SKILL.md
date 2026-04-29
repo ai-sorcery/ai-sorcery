@@ -40,6 +40,8 @@ Read the repo's manifest (`package.json`, `pyproject.toml`, etc.), the full `REA
 
 Stop the loop: press `q`, `s`, or `h` (takes effect at the end of the current iteration), or `touch stop.txt`.
 
+Skip the inter-iteration wait: press `c` or `n` during the `LOOP_WAIT` countdown to start the next iteration immediately. Has no effect during an iteration — the keys are only read by `wait_for_next_loop`, which only runs between iterations.
+
 ## How the personas rotate
 
 `improvement/counter.txt` holds a monotonically increasing integer. `start.sh` picks persona `counter % len(personas)` from `improvement/personas.json`, writes `.state.json` with the assignment, and bumps the counter. Claude reads the persona's instructions from stdout and acts on them. `finish.sh` clears the state and appends to the changelogs.
