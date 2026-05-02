@@ -61,10 +61,6 @@ tart stop <VM_NAME>
 ./teardown.sh     # deletes the VM — setup.sh re-creates it from scratch
 ```
 
-## SF Symbols
-
-Auto-downloaded from [developer.apple.com/sf-symbols](https://developer.apple.com/sf-symbols/) when `sf-symbols` is in `APPS`. The URL is pinned to SF Symbols 7 inside `vm-setup.sh`; bump it when Apple ships a new major version.
-
 ## Xcode
 
 Already installed in the default image (`ghcr.io/cirruslabs/macos-tahoe-xcode`). If you swap `IMAGE` to `macos-tahoe-base:latest` in `config.sh`, Xcode won't be there — Cirrus Labs' base image deliberately excludes it.

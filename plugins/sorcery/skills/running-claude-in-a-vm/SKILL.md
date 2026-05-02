@@ -37,7 +37,7 @@ Batch four questions in a single message:
 1. **Install subdir?** Default `claude-vm`.
 2. **VM name?** Default `claude-macos`.
 3. **Which apps?** Multi-select from:
-   `chrome`, `claude-code` (recommended), `obsidian`, `sublime-text`, `bun` (ships Puppeteer Chrome too), `dotnet10`, `sf-symbols`.
+   `chrome`, `claude-code` (recommended), `obsidian`, `sublime-text`, `bun` (ships Puppeteer Chrome too), `dotnet10`.
    All of these install unattended. Xcode is already pre-installed by the default image (`macos-tahoe-xcode`), so it doesn't appear as a separate option.
 4. **Any shared folders to pre-register?** List of host paths. Each entry can set `terminal: true` to also open a Terminal tab for it.
 
@@ -74,7 +74,6 @@ Then overwrite `<subdir>/config.sh` with the user's answers, using the plain Wri
 - **Requires Homebrew and `jq`.** `setup.sh` will brew-install Tart if missing; `jq` is required on the host to parse `shared-folders.json`.
 - **VM credentials are `admin` / `admin`** — the upstream Tart base image's default. Not suitable for shared or networked use.
 - **VM storage is `~/.tart`** (Tart's own default). External-drive layouts — `TART_HOME` on `/Volumes/...` or `~/.tart` symlinked to one — often fail with cross-device-link errors (see cirruslabs/tart#226, #1112) because some Tart operations rename or hardlink within the same filesystem. Not covered by this skill; advanced users handle it out-of-band.
-- **SF Symbols URL is pinned to version 7.** `vm-setup.sh` downloads `https://devimages-cdn.apple.com/design/resources/download/SF-Symbols-7.dmg` — bump the URL in `install_sf_symbols` when Apple ships a new major version.
 - **Scripts are copies, not symlinks.** Edits to the installed scripts are local to the repo; they don't propagate to other installs. If the plugin's canonical scripts change, re-run the installer — it skips files that already exist, so old versions stay unless the user removes them first.
 - **Not for running Claude instances in parallel on the same host.** Tart supports multiple VMs with different names, but each needs its own clone of the image and its own RAM / disk allocation.
 

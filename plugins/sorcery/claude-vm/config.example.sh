@@ -17,7 +17,7 @@ VM_DISPLAY="1920x1080"
 
 # Apps to install inside the VM. Comment out the ones you don't want.
 # Options: chrome, claude-code (recommended), obsidian, sublime-text,
-# bun, dotnet10, sf-symbols. (Xcode is pre-installed by the default image.)
+# bun, dotnet10. (Xcode is pre-installed by the default image.)
 APPS=(chrome claude-code obsidian sublime-text)
 
 # No TART_HOME here — Tart uses ~/.tart by default and that's the right

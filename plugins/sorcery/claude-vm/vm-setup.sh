@@ -114,41 +114,6 @@ install_dotnet10() {
   '
 }
 
-install_sf_symbols() {
-  want_app sf-symbols || return 0
-  if tart exec "$VM_NAME" test -d "/Applications/SF Symbols.app"; then
-    echo "SF Symbols: already installed."
-    return 0
-  fi
-  # Download the .dmg from Apple's CDN (the link shown on
-  # developer.apple.com/sf-symbols), mount it, install the bundled .pkg.
-  # Pinned to SF Symbols 7 — bump the URL when Apple ships a new major.
-  echo "Installing SF Symbols..."
-  tart exec "$VM_NAME" bash -c '
-    set -euo pipefail
-    DMG=/tmp/SF-Symbols.dmg
-    curl -sSL -o "$DMG" "https://devimages-cdn.apple.com/design/resources/download/SF-Symbols-7.dmg"
-    hdiutil attach "$DMG" -nobrowse
-    sleep 2
-    VOLUME=$(find /Volumes -maxdepth 1 -mindepth 1 \( -name "SFSymbols*" -o -name "SF Symbols*" \) -print -quit 2>/dev/null)
-    if [ -z "$VOLUME" ]; then
-      echo "Error: SF Symbols volume not found after mounting." >&2
-      rm -f "$DMG"
-      exit 1
-    fi
-    PKG=$(find "$VOLUME" -name "*.pkg" 2>/dev/null | head -1)
-    if [ -z "$PKG" ]; then
-      echo "Error: No .pkg found in $VOLUME" >&2
-      hdiutil detach "$VOLUME" -quiet
-      rm -f "$DMG"
-      exit 1
-    fi
-    sudo installer -pkg "$PKG" -target /
-    hdiutil detach "$VOLUME" -quiet
-    rm -f "$DMG"
-  '
-}
-
 install_claude_code() {
   want_app claude-code || return 0
   if ! tart exec "$VM_NAME" brew list claude-code@latest &>/dev/null; then
@@ -188,7 +153,6 @@ install_claude_code() {
 install_chrome
 install_obsidian
 install_sublime_text
-install_sf_symbols
 install_bun
 install_claude_code
 install_dotnet10
