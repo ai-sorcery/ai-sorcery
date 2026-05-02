@@ -16,6 +16,17 @@ export type DemoSkill =
 export const SKILLS: DemoSkill[] = [
   { name: "capturing-test-fixtures",   status: "covered" },
   { name: "claiming-authorship",       status: "covered" },
+  {
+    name: "enforcing-periodic-upgrades",
+    status: "skipped",
+    reason:
+      "Demoing the staleness rejection requires 'touch -t' to fake the " +
+      "lockfile mtime — the only contrived-time moment in an otherwise " +
+      "grounded demo. The rejection-and-bypass pattern is already exercised " +
+      "end-to-end by guarding-commits against a real disallowed-term diff " +
+      "and a real malformed subject; a parallel time-faked walkthrough adds " +
+      "narration weight without adding insight.",
+  },
   { name: "following-best-practices",  status: "covered" },
   { name: "guarding-commits",          status: "covered" },
   { name: "launching-claude",          status: "covered" },

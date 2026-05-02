@@ -1,6 +1,6 @@
 {
   "name": "sorcery-dev",
-  "version": "0.2.17",
+  "version": "0.2.19",
   "description": "Companion plugin for authoring skills in the ai-sorcery repo — not generally useful outside it.",
   "author": {
     "name": "Nicholas Westby",

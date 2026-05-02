@@ -79,21 +79,28 @@ Commit subjects follow `type(scope): subject`, enforced by a git `commit-msg` ho
 - **Check for:** a `commit-msg` hook (in `.githooks/` or wherever `core.hooksPath` points) that rejects malformed subjects. Skim the last 20 commit subjects — if prefixes drift (`fix:` vs `Fix:` vs `bugfix:` vs bare sentences), enforcement isn't in place.
 - **Seed task shape:** install via the sibling skill `guarding-commits`, which bundles the validator, wires the `commit-msg` hook, prints activation guidance for teammates, and covers end-to-end verification.
 
-## 11. Parse, don't validate
+## 11. Periodic dependency updates
+
+A pre-commit hook that refuses commits when the project's lockfile has not been touched in more than a small number of days. Drags the next dependency-refresh sweep forward in time, before drift turns into a debugging session — old deps ship breaking changes, security fixes, or renamed APIs that get harder to absorb the longer they wait. Distinct from *Automated version bumps* (which moves the project's own version forward); this one moves the project's deps forward.
+
+- **Check for:** a pre-commit hook (in `.githooks/` or wherever `core.hooksPath` points) that fails on a stale lockfile, or a CI job that blocks merges on the same condition. Skim the lockfile's mtime — if it's older than ~30 days in an active repo, no one's enforcing the cadence. Renovate / Dependabot configs that auto-open PRs count if the project actually merges them; a config that produces a backlog of ignored PRs doesn't.
+- **Seed task shape:** install via the sibling skill `enforcing-periodic-upgrades`, which bundles a multi-ecosystem staleness check, wires the `pre-commit` hook, prints activation guidance for teammates, and walks through the backup → upgrade → test → commit cycle when the hook fires.
+
+## 12. Parse, don't validate
 
 Use branded / newtype'd types (`UsdAmount`, `EmailAddress`, `FiniteNumber`) so invalid states can't be represented. Parsing happens once at the system boundary; internal code trusts the type.
 
 - **Check for:** branded types in the type system, parser functions at the boundary (`parseAmount`, `parseEmail`), no `number` / `string` sprinkled through business logic for domain values.
 - **Seed task shape:** pick one domain value (e.g., monetary amounts) and introduce a branded type + parser; migrate one or two call sites as the template.
 
-## 12. Transient vs. permanent errors
+## 13. Transient vs. permanent errors
 
 Errors carry an explicit tag saying whether retrying could succeed. Without it, retry logic is heuristic and either over-retries (wasting budget on content errors) or under-retries (giving up on a flaky network).
 
 - **Check for:** an error shape that includes a `transient: true` / `retryable: true` flag, or discriminated-union error types that encode the same thing.
 - **Seed task shape:** introduce `{ transient: boolean }` on the project's error type; classify existing error sites; update the one retry loop that matters most.
 
-## 13. Cheap before expensive
+## 14. Cheap before expensive
 
 When multiple checks or operations produce the same outcome, run the cheap ones first so the expensive ones only see survivors. Applies to validation cascades, test ordering, pipeline stages, and UI render paths.
 

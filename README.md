@@ -19,6 +19,7 @@ And then use AI Sorcery.
 <!-- toc:begin -->
 - [`capturing-test-fixtures`](#capturing-test-fixtures)
 - [`claiming-authorship`](#claiming-authorship)
+- [`enforcing-periodic-upgrades`](#enforcing-periodic-upgrades)
 - [`following-best-practices`](#following-best-practices)
 - [`guarding-commits`](#guarding-commits)
 - [`launching-claude`](#launching-claude)
@@ -47,13 +48,21 @@ Drops `./me.sh` at your repo root. Ask:
 
 Running `./me.sh` rewrites the last 5 commits so their author and committer fields are the current git user, preserving each commit's original author date. Commits where both fields already match aren't changed.
 
+## [`enforcing-periodic-upgrades`](plugins/sorcery/skills/enforcing-periodic-upgrades)
+
+Installs a self-contained pre-commit check that refuses commits when any lockfile in the repo has not been touched in more than `STALE_DAYS` days (default 7). Ask:
+
+> Set up a periodic-upgrades hook in this repo.
+
+Recognises lockfiles for bun, npm, yarn, pnpm, cargo, go, bundler, poetry, uv, pipenv, composer, swiftpm, and mix. Bypass per-commit with `STALE_DAYS=14 git commit ...`, reset the clock with `touch <lockfile>`, or skip entirely with `git commit --no-verify`. Walks through the backup → upgrade → test → record → commit cycle when the hook fires.
+
 ## [`following-best-practices`](plugins/sorcery/skills/following-best-practices)
 
 A catalog of language-agnostic practices that compound if installed day one. Ask:
 
 > What's the low-hanging fruit in this repo?
 
-Claude scans against the list (README, starter scripts, observability, persisted test output, committed progress state, structured task workflow, wall-clock test ceiling, automated version bumps, conventional-commit enforcement, parse-don't-validate, transient-vs-permanent errors, cheap-before-expensive) and surfaces concrete gaps.
+Claude scans against the list (README, starter scripts, observability, persisted test output, committed progress state, structured task workflow, wall-clock test ceiling, automated version bumps, conventional-commit enforcement, periodic dependency updates, parse-don't-validate, transient-vs-permanent errors, cheap-before-expensive) and surfaces concrete gaps.
 
 ## [`guarding-commits`](plugins/sorcery/skills/guarding-commits)
 
