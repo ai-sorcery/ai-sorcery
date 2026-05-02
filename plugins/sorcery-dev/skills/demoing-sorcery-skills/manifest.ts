@@ -16,6 +16,7 @@ export type DemoSkill =
 export const SKILLS: DemoSkill[] = [
   { name: "capturing-test-fixtures",   status: "covered" },
   { name: "claiming-authorship",       status: "covered" },
+  { name: "using-sf-symbols",          status: "covered" },
   {
     name: "enforcing-periodic-upgrades",
     status: "skipped",

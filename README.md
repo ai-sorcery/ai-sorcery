@@ -29,6 +29,7 @@ And then use AI Sorcery.
 - [`summarizing-sessions`](#summarizing-sessions)
 - [`using-dot-claude`](#using-dot-claude)
 - [`using-llm-tasks`](#using-llm-tasks)
+- [`using-sf-symbols`](#using-sf-symbols)
 - [`writing-commit-messages`](#writing-commit-messages)
 <!-- toc:end -->
 
@@ -134,6 +135,14 @@ A markdown-driven task workflow. Ask:
 > Set up an LLM task workflow for this repo.
 
 Claude scaffolds `llm-tasks/`, consults `following-best-practices` for a seed task, and drives the four-section lifecycle (Initial Understanding → Tentative Plan → Implementation → Completion Notes). Subsequent invocations handle `new`, `done`, and `clump` through a bundled script.
+
+## [`using-sf-symbols`](plugins/sorcery/skills/using-sf-symbols)
+
+Drops two scripts under `scripts/` that turn Apple's free SF Symbols catalog into a no-friction icon source. Ask:
+
+> I need a download icon — find an SF Symbol and convert it to SVG.
+
+Search by keyword (`bun scripts/sf-symbol-search.ts <query>`), then convert any named symbol to a `viewBox="0 0 1 1"` SVG with `fill="currentColor"` (`swift scripts/sf-symbol-to-svg.swift <name> <out.svg>`). Uses public AppKit + Vision APIs — no automation prompt and no dependency on SF Symbols.app. macOS only.
 
 ## [`writing-commit-messages`](plugins/sorcery/skills/writing-commit-messages)
 

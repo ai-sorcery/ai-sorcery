@@ -17,7 +17,7 @@ Treat the user as silent and the audience as the screen capture. Narrate **befor
 
 All steps run inside `<repo-root>/demo-workspace/`, gitignored at the host repo root. `reset-workspace.ts` (sibling) wipes and reseeds it before every run with a skeleton TypeScript "snippet-box" CLI plus three Claude-Bot-authored commits. The skeleton deliberately lacks a README, setup scripts, observability, and committed progress state, so `following-best-practices` finds real gaps and `claiming-authorship` finds bot commits to rewrite. After the reset, `cd demo-workspace` and stay there for every step unless noted.
 
-**Cwd discipline.** Every code block in this runbook runs from inside `demo-workspace/`. The user may have launched Claude from the parent `ai-sorcery` repo root; the parent has its own `./me.sh` (a launcher delegate), its own real commit history, and its own `.claude/`, so any command resolving against the wrong cwd would mutate the *parent* tree — clobbering the launcher, committing into the plugin repo, or rebasing real commits. The fixed rule: after step 1 does `cd demo-workspace`, never leave; if `pwd` doesn't end in `/demo-workspace`, stop and `cd` back. Steps 6 and 11 include an explicit `[[ "$PWD" == */demo-workspace ]] || exit` guard before any history-rewriting operation, but that's belt-and-suspenders — the real defense is staying put.
+**Cwd discipline.** Every code block in this runbook runs from inside `demo-workspace/`. The user may have launched Claude from the parent `ai-sorcery` repo root; the parent has its own `./me.sh` (a launcher delegate), its own real commit history, and its own `.claude/`, so any command resolving against the wrong cwd would mutate the *parent* tree — clobbering the launcher, committing into the plugin repo, or rebasing real commits. The fixed rule: after step 1 does `cd demo-workspace`, never leave; if `pwd` doesn't end in `/demo-workspace`, stop and `cd` back. Steps 6 and 12 include an explicit `[[ "$PWD" == */demo-workspace ]] || exit` guard before any history-rewriting operation, but that's belt-and-suspenders — the real defense is staying put.
 
 ## Run order
 
@@ -323,9 +323,54 @@ Keep the acknowledgment specific to whatever actually shows in the changelog and
 
 > "Two iterations on camera; an unattended overnight run would compound this into something real."
 
-### 9. `learning-new-tech` — scaffold the first lesson of a curriculum
+### 9. `using-sf-symbols` — fetch a code icon for the planned export feature
 
-> "Step nine is the learning skill. The snippet-box is a Bun project — `package.json` already declares it — so we'll ask Claude to build us a Bun learning track without having to switch tech."
+> "snippet-box's roadmap includes an `export` subcommand that renders a stored snippet as a styled image fit for sharing. The image's header carries a small code glyph to hint at the content. We won't ship the renderer today — same `prepare the foundation, defer the implementation` pattern step 11 will use for the parser fixture — but we'll grab the icon now."
+
+Load the skill before exercising it — `Skill: sorcery:using-sf-symbols`.
+
+Install the scripts:
+
+```bash
+"${CLAUDE_PLUGIN_ROOT}/../sorcery/sf-symbols/install.sh"
+```
+
+Run a quick search to show the catalog is queryable. Apple's curated keywords don't cover every concept — `code` surfaces only QR / barcode entries here — so when you already know the glyph you want, the fast path is to convert by name directly:
+
+```bash
+bun scripts/sf-symbol-search.ts code --limit 5
+```
+
+The glyph we want is `chevron.left.forwardslash.chevron.right` (Apple's verbose convention of naming each visual component — chevron-left, forwardslash, chevron-right gives the universal `</>`). Convert it to an SVG sized for the export-image header:
+
+```bash
+mkdir -p assets
+swift scripts/sf-symbol-to-svg.swift \
+  chevron.left.forwardslash.chevron.right \
+  assets/export-icon.svg
+```
+
+Verify:
+
+```bash
+ls -la assets/export-icon.svg
+head -c 200 assets/export-icon.svg
+```
+
+The output is a 1×1 viewBox with `fill="currentColor"` — wherever the renderer drops it, surrounding text color drives the icon's color.
+
+Land the scripts and the asset together. The step-6 commit-msg hook is still active, so the subject must follow the conventional shape:
+
+```bash
+git add scripts/sf-symbol-search.ts scripts/sf-symbol-to-svg.swift assets/
+git commit -m "feat(export): icon for the planned snippet export"
+```
+
+> "One asset committed for a feature that doesn't exist yet. The skill itself doesn't install Apple's SF Symbols.app — its scripts read the OS-shipped catalog directly. A designer who wants the visual browser is one `brew install --cask sf-symbols` away on the side."
+
+### 10. `learning-new-tech` — scaffold the first lesson of a curriculum
+
+> "Step ten is the learning skill. The snippet-box is a Bun project — `package.json` already declares it — so we'll ask Claude to build us a Bun learning track without having to switch tech."
 
 This step operates inside the same `demo-workspace/` but in a separate `learning/` subtree, so it doesn't tangle with the snippet-box.
 
@@ -350,7 +395,7 @@ Show the file tree on camera. Don't actually run `./start.sh` — completing a l
 
 > "Outline first, lessons one at a time. After the user finishes lesson 01, they come back — we review the work, capture feedback, adapt the outline, and generate lesson 02. Each lesson is self-contained, so the user can drop in to any of them cold."
 
-### 10. `capturing-test-fixtures` — snapshot a real page for the parser tests
+### 11. `capturing-test-fixtures` — snapshot a real page for the parser tests
 
 > "Snippet-box's roadmap includes pulling code blocks out of real web pages — eventually the CLI grows an `add-from-url` subcommand. We won't write that parser today, but we will lay the test fixture for it. `capturing-test-fixtures` codifies how to capture, store, and simplify a real page so the future test stays fast and the source of truth survives."
 
@@ -392,7 +437,7 @@ You should see the raw original under `originals/`, the `.meta.json` companion (
 
 > "Mechanical strip done — scripts, styles, comments, link/meta tags gone. The semantic trim — the LLM pass that drops everything irrelevant to the specific test — happens when we actually write the parser test. We're laying foundations here, not finishing the parser."
 
-### 11. `claiming-authorship` — re-author the bot commits to a chosen identity
+### 12. `claiming-authorship` — re-author the bot commits to a chosen identity
 
 > "The seed gave us three commits authored by `bot@anthropic.com`. `claiming-authorship` rewrites them under whatever identity we pass in — handy here because this VM has no git config of its own."
 
@@ -405,7 +450,7 @@ git log --format="%h %ae %s"
 git status
 ```
 
-The seed's three commits are still `bot@anthropic.com`. The status read tells you whether the worktree is clean: by step 11 the loop iterations from step 8 may have left tracked-file changes uncommitted, and steps 9-10 will have added `learning/` and `tests/fixtures/parser/` as untracked trees. Untracked files don't block a rebase; modified tracked files do. If `git status` shows any `M` or ` D` lines, stash them before running `me.sh` (untracked stays alone):
+The seed's three commits are still `bot@anthropic.com`. The status read tells you whether the worktree is clean: by step 12 the loop iterations from step 8 may have left tracked-file changes uncommitted, and steps 10-11 will have added `learning/` and `tests/fixtures/parser/` as untracked trees. Untracked files don't block a rebase; modified tracked files do. If `git status` shows any `M` or ` D` lines, stash them before running `me.sh` (untracked stays alone):
 
 ```bash
 git diff --quiet || git stash push -m 'pre-claim-authorship'
@@ -417,7 +462,7 @@ git diff --quiet || git stash push -m 'pre-claim-authorship'
 [[ "$PWD" == */demo-workspace ]] || { echo "abort: not in demo-workspace ($PWD)" >&2; exit 1; }
 ```
 
-Install snippet-box's own `./me.sh` and run it with a fake demo identity. **Always pass an explicit window flag here, never rely on the default.** By step 11 there are at least 6 commits between HEAD and the deepest bot commit (three seed commits + step-6 probes + step-8's loop infra commit + any iteration commits), and a future revision of this runbook may add more — so the default `-5` window would leave the deepest bot at the rebase upstream and untouched, silently. Pass `-15` to walk back well past every bot commit; `me.sh` falls back to `--root` if the branch is shorter, so over-shooting is always safe and under-shooting is what burns you. The VM has no git config, so `CLAIM_EMAIL` / `CLAIM_NAME` give the script an identity to claim under without touching git config:
+Install snippet-box's own `./me.sh` and run it with a fake demo identity. **Always pass an explicit window flag here, never rely on the default.** By step 12 there are at least 7 commits between HEAD and the deepest bot commit (three seed commits + step-6 probes + step-8's loop infra commit + step-9's icon commit + any iteration commits), and a future revision of this runbook may add more — so the default `-5` window would leave the deepest bot at the rebase upstream and untouched, silently. Pass `-15` to walk back well past every bot commit; `me.sh` falls back to `--root` if the branch is shorter, so over-shooting is always safe and under-shooting is what burns you. The VM has no git config, so `CLAIM_EMAIL` / `CLAIM_NAME` give the script an identity to claim under without touching git config:
 
 ```bash
 cp "${CLAUDE_PLUGIN_ROOT}/../sorcery/me.sh" ./me.sh && chmod +x ./me.sh
@@ -438,7 +483,7 @@ Finally, clear the resume marker so the next recording starts cleanly. `reset-wo
 rm -f .demo-progress
 ```
 
-### 12. `running-claude-in-a-vm` — **skipped, with reason**
+### 13. `running-claude-in-a-vm` — **skipped, with reason**
 
 > "There's one public skill we won't demo: `running-claude-in-a-vm`. We're already inside a Tart VM right now, and Apple's Virtualization framework doesn't support nested virtualization, so a Tart-in-Tart attempt would just fail. The manifest records the skip with this reason; the pre-commit guard verifies the manifest stays in sync."
 
@@ -460,9 +505,9 @@ bun src/index.ts list
 git log --format="%h %ae %s" -8
 ```
 
-The CLI's entry point may still echo a stub depending on what the loop touched in step 8 — we built the *infrastructure* to develop snippet-box and the loop has already started filling pieces in. The git log shows commits attributed to the user (step 11), the bot's gone, the loop's two iterations are recorded as their own commits, and the pending `add-run-script` task is queued for the next loop iteration to pick up.
+The CLI's entry point may still echo a stub depending on what the loop touched in step 8 — we built the *infrastructure* to develop snippet-box and the loop has already started filling pieces in. The git log shows commits attributed to the user (step 12), the bot's gone, the loop's two iterations are recorded as their own commits, the export icon from step 9 is on disk, and the pending `add-run-script` task is queued for the next loop iteration to pick up.
 
-> "Snippet-box came in as a bot-authored stub. It leaves with a session greeter, guarded commit history, two unattended improvement iterations, fresh SessionEnd summaries from those iterations in `~/LLM_Summaries/`, a queued task, and a learning track. Each step earned its place."
+> "Snippet-box came in as a bot-authored stub. It leaves with a session greeter, guarded commit history, two unattended improvement iterations, fresh SessionEnd summaries from those iterations in `~/LLM_Summaries/`, an export icon ready for the planned renderer, a queued task, and a learning track. Each step earned its place."
 
 ## Wrap-up — the skill-improvement follow-up list
 
