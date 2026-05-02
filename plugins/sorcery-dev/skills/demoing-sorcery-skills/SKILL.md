@@ -17,13 +17,13 @@ Treat the user as silent and the audience as the screen capture. Narrate **befor
 
 All steps run inside `<repo-root>/demo-workspace/`, gitignored at the host repo root. `reset-workspace.ts` (sibling) wipes and reseeds it before every run with a skeleton TypeScript "snippet-box" CLI plus three Claude-Bot-authored commits. The skeleton deliberately lacks a README, setup scripts, observability, and committed progress state, so `following-best-practices` finds real gaps and `claiming-authorship` finds bot commits to rewrite. After the reset, `cd demo-workspace` and stay there for every step unless noted.
 
-**Cwd discipline.** Every code block in this runbook runs from inside `demo-workspace/`. The user may have launched Claude from the parent `ai-sorcery` repo root; the parent has its own `./me.sh` (a launcher delegate), its own real commit history, and its own `.claude/`, so any command resolving against the wrong cwd would mutate the *parent* tree — clobbering the launcher, committing into the plugin repo, or rebasing real commits. The fixed rule: after step 1 does `cd demo-workspace`, never leave; if `pwd` doesn't end in `/demo-workspace`, stop and `cd` back. Steps 6 and 12 include an explicit `[[ "$PWD" == */demo-workspace ]] || exit` guard before any history-rewriting operation, but that's belt-and-suspenders — the real defense is staying put.
+**Cwd discipline.** Every code block in this runbook runs from inside `demo-workspace/`. The user may have launched Claude from the parent `ai-sorcery` repo root; the parent has its own `./me.sh` (a launcher delegate), its own real commit history, and its own `.claude/`, so any command resolving against the wrong cwd would mutate the *parent* tree — clobbering the launcher, committing into the plugin repo, or rebasing real commits. The fixed rule: after step 1 does `cd demo-workspace`, never leave; if `pwd` doesn't end in `/demo-workspace`, stop and `cd` back. Steps 6 and 13 include an explicit `[[ "$PWD" == */demo-workspace ]] || exit` guard before any history-rewriting operation, but that's belt-and-suspenders — the real defense is staying put.
 
 ## Run order
 
 The full coverage list lives in `manifest.ts` next to this file. The pre-commit guard `check-skill-coverage.ts` blocks any commit that adds a new public skill without listing it there.
 
-**Resume detection.** On every invocation, run `cd demo-workspace 2>/dev/null || true` first (idempotent — no-op if you're already inside `demo-workspace/`, harmless if you're not in the parent), then read `.demo-progress`. If it contains a step number, the previous session paused mid-demo (see step 7's pause); skip every step before that number and announce the resume on camera ("we're picking up at step N — that hook from step 2 just printed `snippet-box · 0 snippets stored` because we're now under `./claude.sh`"). If the file is missing or empty, run from step 1.
+**Resume detection.** On every invocation, run `cd demo-workspace 2>/dev/null || true` first (idempotent — no-op if you're already inside `demo-workspace/`, harmless if you're not in the parent), then read `.demo-progress`. If it contains a step number, the previous session paused mid-demo (see step 8's pause); skip every step before that number and announce the resume on camera ("we're picking up at step N — that hook from step 2 just printed `snippet-box · 0 snippets stored` because we're now under `./claude.sh`"). If the file is missing or empty, run from step 1.
 
 ### 1. Reset the workspace
 
@@ -83,7 +83,7 @@ cat <<'EOF' | "${CLAUDE_PLUGIN_ROOT}/../sorcery/dot-claude.sh" write .claude/set
 EOF
 ```
 
-Confirm with `cat .claude/hooks/session-start.sh` and `cat .claude/settings.json` — both files land cleanly even though Claude's native `Write` would have refused. The hook won't fire until a *new* Claude session opens in this directory; we'll see that happen when we restart under `./claude.sh` after step 7.
+Confirm with `cat .claude/hooks/session-start.sh` and `cat .claude/settings.json` — both files land cleanly even though Claude's native `Write` would have refused. The hook won't fire until a *new* Claude session opens in this directory; we'll see that happen when we restart under `./claude.sh` after step 8.
 
 > "We'll see this hook print `snippet-box · 0 snippets stored` when the demo resumes — both proof of the bypass and the first piece of snippet-box infrastructure landing."
 
@@ -116,7 +116,7 @@ Narrate both edits explicitly so the audience understands the why:
 
 > "We're forcing `SKIP_RC=1` so the launcher omits `--rc` on every run, and we're injecting `--plugin-dir` so the new session loads the same sorcery plugins this session uses. The plugin's canonical `claude.sh` is unchanged; both are local edits."
 
-Verify with `cat ./claude.sh` — show the `SKIP_RC=1` line near the top, and confirm both `exec` lines carry the two `--plugin-dir` flags pointing at absolute paths plus the unchanged `--effort max --model claude-opus-4-7` tail. The launcher takes the `SKIP_RC=1` branch on every invocation, so the actual command line that runs is the no-`--rc` form. We won't run `./claude.sh` here (no nesting); the actual switchover happens after step 7.
+Verify with `cat ./claude.sh` — show the `SKIP_RC=1` line near the top, and confirm both `exec` lines carry the two `--plugin-dir` flags pointing at absolute paths plus the unchanged `--effort max --model claude-opus-4-7` tail. The launcher takes the `SKIP_RC=1` branch on every invocation, so the actual command line that runs is the no-`--rc` form. We won't run `./claude.sh` here (no nesting); the actual switchover happens after step 8.
 
 > "After the next few steps, we'll open a new Terminal tab and come back through `./claude.sh`. From that point on, snippet-box is a `./claude.sh` project. We don't exit the original session — Claude Code prints a resume-ID line on `/exit` that we don't want in the recording."
 
@@ -216,7 +216,7 @@ Verify with `git log -2 --format='%h %s'` — the two clean commits landed; the 
 
 #### Land the install as its own commit
 
-The hook scripts and the `.gitignore` line for the terms file are still uncommitted at this point. Land them now, before step 8 — otherwise step 8's loop install will pile on top, and step 8's commit will accidentally carry the guard scaffolding too:
+The hook scripts and the `.gitignore` line for the terms file are still uncommitted at this point. Land them now — step 7's staleness installer also writes to `.githooks/pre-commit`, so leaving these unstaged would tangle the two guards in step 7's commit. Step 9's loop is even less forgiving: its `git add -A` end-of-iteration step would absorb anything still loose into the first iteration's commit.
 
 ```bash
 git add .githooks/ .gitignore
@@ -225,9 +225,37 @@ git commit -m "chore: install commit guards"
 
 > "End-to-end: two guards installed, both rejection paths demonstrated, both clean paths landed, install committed. The terms file stays out of git so each dev keeps their own list; conventional-commits applies uniformly."
 
-### 7. `summarizing-sessions` — install the SessionEnd summary hook
+### 7. `enforcing-periodic-upgrades` — wire the dependency-staleness guard
 
-> "The SessionEnd hook fires whenever a Claude session ends. We install it now; step 8's loop spawns its own Claude sessions that end programmatically, so we'll see summaries land as a side effect of the loop running — no on-camera `/exit` needed."
+> "Step seven adds a time-based commit guard. snippet-box has a `bun.lock`, so the guard has something concrete to watch — if that lockfile sits untouched past the threshold, the next commit gets blocked until a dependency refresh runs. We won't fast-forward `bun.lock`'s mtime to provoke a rejection on camera; the rejection mechanic is the same as step 6's content-based guard, and faking time would be the only contrived moment in the demo. Just install and verify the guard landed."
+
+Load the skill before exercising it — `Skill: sorcery:enforcing-periodic-upgrades`.
+
+Install:
+
+```bash
+"${CLAUDE_PLUGIN_ROOT}/../sorcery/install-periodic-upgrades.sh"
+```
+
+The installer drops `check-update-staleness.sh` into `.githooks/` and prepends a call into `.githooks/pre-commit`, which step 6 already set up. Verify both pieces landed:
+
+```bash
+ls -la .githooks/
+grep periodic-upgrades .githooks/pre-commit
+```
+
+Land the install:
+
+```bash
+git add .githooks/check-update-staleness.sh .githooks/pre-commit
+git commit -m "chore(githooks): wire the staleness guard"
+```
+
+> "Two guards in `.githooks/pre-commit` now: one content-based from step 6, one time-based from this step. Both wired into the same hook file, both bypassable with `--no-verify` when you really mean it. The next time `bun.lock` ages past the threshold, the next commit gets blocked."
+
+### 8. `summarizing-sessions` — install the SessionEnd summary hook
+
+> "The SessionEnd hook fires whenever a Claude session ends. We install it now; step 9's loop spawns its own Claude sessions that end programmatically, so we'll see summaries land as a side effect of the loop running — no on-camera `/exit` needed."
 
 Load the skill before exercising it — `Skill: sorcery:summarizing-sessions`.
 
@@ -244,7 +272,7 @@ Verify the registration. The installer merges into the existing `.claude/setting
 Show both keys present, then drop a progress marker the resumed session will read:
 
 ```bash
-echo 8 > .demo-progress
+echo 9 > .demo-progress
 ```
 
 Hand the demo off to a fresh session via the `./claude.sh` we built in step 3 — **don't exit the current session**. A `/exit` from an interactive session prints a "resume with ID …" line that would leak into the recording. Open a new Terminal tab instead; the original session stays idle in its tab (we'll close it off-camera later if at all).
@@ -260,9 +288,9 @@ The literal commands the viewer should see on screen:
 "resume the sorcery demo"
 ```
 
-**Stop here. End the turn.** This stop is unconditional. Even if the user said "run the whole demo" / "run through the demo" / "do everything" up front, the tab swap is verification, not theater — narrating past it reduces step 8's intended verifications (the SessionStart hook firing in a fresh session, the `./claude.sh` exec line booting end-to-end with sorcery loaded) to mere narration, which is exactly the failure this stop exists to prevent. After writing `.demo-progress`, do not run any further commands and do not narrate past this point. The skill picks up at step 8 on its next invocation by reading `.demo-progress`. The SessionEnd summary hook stays unfired for now — step 8's loop iterations will exercise it as they go.
+**Stop here. End the turn.** This stop is unconditional. Even if the user said "run the whole demo" / "run through the demo" / "do everything" up front, the tab swap is verification, not theater — narrating past it reduces step 9's intended verifications (the SessionStart hook firing in a fresh session, the `./claude.sh` exec line booting end-to-end with sorcery loaded) to mere narration, which is exactly the failure this stop exists to prevent. After writing `.demo-progress`, do not run any further commands and do not narrate past this point. The skill picks up at step 9 on its next invocation by reading `.demo-progress`. The SessionEnd summary hook stays unfired for now — step 9's loop iterations will exercise it as they go.
 
-### 8. `running-improvement-loops` — install, run a couple iterations, see what landed
+### 9. `running-improvement-loops` — install, run a couple iterations, see what landed
 
 > "The improvement loop runs Claude unattended, rotating through personas. Each iteration is usually a few minutes — fast enough to show two on camera, sped up in post."
 
@@ -280,7 +308,7 @@ Verify with `ls improvement/` and `jq '.[] | .name' improvement/personas.json`.
 
 #### Land the loop infra as its own commit
 
-`improvement/finish.sh` runs `git add -A` at the end of every iteration, so anything still uncommitted when the loop starts gets folded into the first iteration's commit. Land the loop scaffolding now to keep iteration commits clean. Step 6 already committed the guards, so this commit only carries the loop's own files:
+`improvement/finish.sh` runs `git add -A` at the end of every iteration, so anything still uncommitted when the loop starts gets folded into the first iteration's commit. Land the loop scaffolding now to keep iteration commits clean. Steps 6 and 7 already committed their hook entries, so this commit only carries the loop's own files:
 
 ```bash
 git status                                     # double-check nothing else is pending
@@ -305,7 +333,7 @@ Stop and wait. The current Claude session stays open; the user comes back when t
 
 #### Resume — read what the loop left behind (and what the SessionEnd hook caught)
 
-When the user signals they're back ("resume" / "ok done" / "two iterations done"), look at three things: what the loop committed, what its wrap-up hook recorded, and what the SessionEnd hook from step 7 captured as a side effect.
+When the user signals they're back ("resume" / "ok done" / "two iterations done"), look at three things: what the loop committed, what its wrap-up hook recorded, and what the SessionEnd hook from step 8 captured as a side effect.
 
 ```bash
 git log --format="%h %s" -10
@@ -323,9 +351,9 @@ Keep the acknowledgment specific to whatever actually shows in the changelog and
 
 > "Two iterations on camera; an unattended overnight run would compound this into something real."
 
-### 9. `using-sf-symbols` — fetch a code icon for the planned export feature
+### 10. `using-sf-symbols` — fetch a code icon for the planned export feature
 
-> "snippet-box's roadmap includes an `export` subcommand that renders a stored snippet as a styled image fit for sharing. The image's header carries a small code glyph to hint at the content. We won't ship the renderer today — same `prepare the foundation, defer the implementation` pattern step 11 will use for the parser fixture — but we'll grab the icon now."
+> "snippet-box's roadmap includes an `export` subcommand that renders a stored snippet as a styled image fit for sharing. The image's header carries a small code glyph to hint at the content. We won't ship the renderer today — same `prepare the foundation, defer the implementation` pattern step 12 will use for the parser fixture — but we'll grab the icon now."
 
 Load the skill before exercising it — `Skill: sorcery:using-sf-symbols`.
 
@@ -368,9 +396,9 @@ git commit -m "feat(export): icon for the planned snippet export"
 
 > "One asset committed for a feature that doesn't exist yet. The skill itself doesn't install Apple's SF Symbols.app — its scripts read the OS-shipped catalog directly. A designer who wants the visual browser is one `brew install --cask sf-symbols` away on the side."
 
-### 10. `learning-new-tech` — scaffold the first lesson of a curriculum
+### 11. `learning-new-tech` — scaffold the first lesson of a curriculum
 
-> "Step ten is the learning skill. The snippet-box is a Bun project — `package.json` already declares it — so we'll ask Claude to build us a Bun learning track without having to switch tech."
+> "Step eleven is the learning skill. The snippet-box is a Bun project — `package.json` already declares it — so we'll ask Claude to build us a Bun learning track without having to switch tech."
 
 This step operates inside the same `demo-workspace/` but in a separate `learning/` subtree, so it doesn't tangle with the snippet-box.
 
@@ -395,7 +423,7 @@ Show the file tree on camera. Don't actually run `./start.sh` — completing a l
 
 > "Outline first, lessons one at a time. After the user finishes lesson 01, they come back — we review the work, capture feedback, adapt the outline, and generate lesson 02. Each lesson is self-contained, so the user can drop in to any of them cold."
 
-### 11. `capturing-test-fixtures` — snapshot a real page for the parser tests
+### 12. `capturing-test-fixtures` — snapshot a real page for the parser tests
 
 > "Snippet-box's roadmap includes pulling code blocks out of real web pages — eventually the CLI grows an `add-from-url` subcommand. We won't write that parser today, but we will lay the test fixture for it. `capturing-test-fixtures` codifies how to capture, store, and simplify a real page so the future test stays fast and the source of truth survives."
 
@@ -437,7 +465,7 @@ You should see the raw original under `originals/`, the `.meta.json` companion (
 
 > "Mechanical strip done — scripts, styles, comments, link/meta tags gone. The semantic trim — the LLM pass that drops everything irrelevant to the specific test — happens when we actually write the parser test. We're laying foundations here, not finishing the parser."
 
-### 12. `claiming-authorship` — re-author the bot commits to a chosen identity
+### 13. `claiming-authorship` — re-author the bot commits to a chosen identity
 
 > "The seed gave us three commits authored by `bot@anthropic.com`. `claiming-authorship` rewrites them under whatever identity we pass in — handy here because this VM has no git config of its own."
 
@@ -450,7 +478,7 @@ git log --format="%h %ae %s"
 git status
 ```
 
-The seed's three commits are still `bot@anthropic.com`. The status read tells you whether the worktree is clean: by step 12 the loop iterations from step 8 may have left tracked-file changes uncommitted, and steps 10-11 will have added `learning/` and `tests/fixtures/parser/` as untracked trees. Untracked files don't block a rebase; modified tracked files do. If `git status` shows any `M` or ` D` lines, stash them before running `me.sh` (untracked stays alone):
+The seed's three commits are still `bot@anthropic.com`. The status read tells you whether the worktree is clean: by step 13 the loop iterations from step 9 may have left tracked-file changes uncommitted, and steps 11-12 will have added `learning/` and `tests/fixtures/parser/` as untracked trees. Untracked files don't block a rebase; modified tracked files do. If `git status` shows any `M` or ` D` lines, stash them before running `me.sh` (untracked stays alone):
 
 ```bash
 git diff --quiet || git stash push -m 'pre-claim-authorship'
@@ -462,7 +490,7 @@ git diff --quiet || git stash push -m 'pre-claim-authorship'
 [[ "$PWD" == */demo-workspace ]] || { echo "abort: not in demo-workspace ($PWD)" >&2; exit 1; }
 ```
 
-Install snippet-box's own `./me.sh` and run it with a fake demo identity. **Always pass an explicit window flag here, never rely on the default.** By step 12 there are at least 7 commits between HEAD and the deepest bot commit (three seed commits + step-6 probes + step-8's loop infra commit + step-9's icon commit + any iteration commits), and a future revision of this runbook may add more — so the default `-5` window would leave the deepest bot at the rebase upstream and untouched, silently. Pass `-15` to walk back well past every bot commit; `me.sh` falls back to `--root` if the branch is shorter, so over-shooting is always safe and under-shooting is what burns you. The VM has no git config, so `CLAIM_EMAIL` / `CLAIM_NAME` give the script an identity to claim under without touching git config:
+Install snippet-box's own `./me.sh` and run it with a fake demo identity. **Always pass an explicit window flag here, never rely on the default.** By step 13 there are at least 7 commits between HEAD and the deepest bot commit (three seed commits + step-6 probes + step-9's loop infra commit + step-10's icon commit + any iteration commits), and a future revision of this runbook may add more — so the default `-5` window would leave the deepest bot at the rebase upstream and untouched, silently. Pass `-15` to walk back well past every bot commit; `me.sh` falls back to `--root` if the branch is shorter, so over-shooting is always safe and under-shooting is what burns you. The VM has no git config, so `CLAIM_EMAIL` / `CLAIM_NAME` give the script an identity to claim under without touching git config:
 
 ```bash
 cp "${CLAUDE_PLUGIN_ROOT}/../sorcery/me.sh" ./me.sh && chmod +x ./me.sh
@@ -477,13 +505,13 @@ git stash list | grep -q pre-claim-authorship && git stash pop
 
 > "Fake identity for the recording — off-camera, you'd run `./me.sh` without env vars and claim under your real `user.email`. Either way, re-running is a no-op once a commit is already under the chosen identity."
 
-Finally, clear the resume marker so the next recording starts cleanly. `reset-workspace.ts` also wipes it on the next run, but a partial-then-resumed flow without a reset would otherwise re-enter step 8:
+Finally, clear the resume marker so the next recording starts cleanly. `reset-workspace.ts` also wipes it on the next run, but a partial-then-resumed flow without a reset would otherwise re-enter step 9:
 
 ```bash
 rm -f .demo-progress
 ```
 
-### 13. `running-claude-in-a-vm` — **skipped, with reason**
+### 14. `running-claude-in-a-vm` — **skipped, with reason**
 
 > "There's one public skill we won't demo: `running-claude-in-a-vm`. We're already inside a Tart VM right now, and Apple's Virtualization framework doesn't support nested virtualization, so a Tart-in-Tart attempt would just fail. The manifest records the skip with this reason; the pre-commit guard verifies the manifest stays in sync."
 
@@ -505,7 +533,7 @@ bun src/index.ts list
 git log --format="%h %ae %s" -8
 ```
 
-The CLI's entry point may still echo a stub depending on what the loop touched in step 8 — we built the *infrastructure* to develop snippet-box and the loop has already started filling pieces in. The git log shows commits attributed to the user (step 12), the bot's gone, the loop's two iterations are recorded as their own commits, the export icon from step 9 is on disk, and the pending `add-run-script` task is queued for the next loop iteration to pick up.
+The CLI's entry point may still echo a stub depending on what the loop touched in step 9 — we built the *infrastructure* to develop snippet-box and the loop has already started filling pieces in. The git log shows commits attributed to the user (step 13), the bot's gone, the loop's two iterations are recorded as their own commits, the export icon from step 10 is on disk, and the pending `add-run-script` task is queued for the next loop iteration to pick up.
 
 > "Snippet-box came in as a bot-authored stub. It leaves with a session greeter, guarded commit history, two unattended improvement iterations, fresh SessionEnd summaries from those iterations in `~/LLM_Summaries/`, an export icon ready for the planned renderer, a queued task, and a learning track. Each step earned its place."
 
@@ -535,9 +563,9 @@ Bias toward concrete suggestions ("rename flag X to Y", "add a check for Z befor
 
 - **Apple Silicon, macOS host.** Several skills (the loop, the VM, the launcher) assume `bun` and `jq` are on the host. The reset script depends on `bun`. The improvement-loop installer fails fast on missing `bun` / `jq`.
 - **Workspace lifetime.** `demo-workspace/` survives between demo runs only as long as you don't reset. The next run wipes it. If a viewer wants to inspect post-demo state, do it before re-running this skill.
-- **`launching-claude` is exercised across a tab swap.** Nesting Claude inside the current session is still unsupported, so step 3 installs and inspects, then step 7 pauses the demo. The user opens a new Terminal tab, runs `./claude.sh` there, and prompts "resume the sorcery demo" in the new session. The original session stays idle in its tab — the demo never shows an interactive `/exit`, because Claude Code prints a "resume with ID …" line on exit that we don't want in the recording.
-- **`summarizing-sessions` is exercised by step 8's loop iterations.** The loop spawns Claude sessions that end programmatically (no resume-ID leak), and each one fires the SessionEnd hook. The `find ~/LLM_Summaries -mmin -30` line during step 8's resume surfaces those summary files as the verifiable artifact.
-- **The pause-and-resume relies on `.demo-progress`.** The skill writes `8` to `demo-workspace/.demo-progress` at the end of step 7 and reads it on its next invocation. `reset-workspace.ts` wipes the workspace, so the marker auto-clears between recordings — but if a partial recording leaves the file behind, delete it manually before starting fresh.
+- **`launching-claude` is exercised across a tab swap.** Nesting Claude inside the current session is still unsupported, so step 3 installs and inspects, then step 8 pauses the demo. The user opens a new Terminal tab, runs `./claude.sh` there, and prompts "resume the sorcery demo" in the new session. The original session stays idle in its tab — the demo never shows an interactive `/exit`, because Claude Code prints a "resume with ID …" line on exit that we don't want in the recording.
+- **`summarizing-sessions` is exercised by step 9's loop iterations.** The loop spawns Claude sessions that end programmatically (no resume-ID leak), and each one fires the SessionEnd hook. The `find ~/LLM_Summaries -mmin -30` line during step 9's resume surfaces those summary files as the verifiable artifact.
+- **The pause-and-resume relies on `.demo-progress`.** The skill writes `9` to `demo-workspace/.demo-progress` at the end of step 8 and reads it on its next invocation. `reset-workspace.ts` wipes the workspace, so the marker auto-clears between recordings — but if a partial recording leaves the file behind, delete it manually before starting fresh.
 - **`running-improvement-loops` runs on camera for two iterations.** Typical iterations finish in a few minutes; the recording is sped up over the iteration stretch in post-production.
 - **`running-claude-in-a-vm` is unrunnable from inside a Tart VM** (this is the recording environment). The manifest skips it.
 - **The pre-commit guard stays loud.** When a contributor adds a public skill without updating `manifest.ts` and `SKILL.md`, the commit fails until they do. That is by design — the demo skill is the only place the full skill catalog is exercised end-to-end, and silent drift means the recording you take six months from now is missing skills the catalog has gained.
