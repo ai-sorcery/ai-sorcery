@@ -17,14 +17,12 @@ repo_root="$(git rev-parse --show-toplevel)"
 current_hooks_path="$(git -C "$repo_root" config --local --get core.hooksPath || true)"
 if [ -z "$current_hooks_path" ]; then
     git -C "$repo_root" config --local core.hooksPath .githooks
-    hooks_dir="$repo_root/.githooks"
     echo "install: set core.hooksPath to .githooks for this clone"
-elif [ "$current_hooks_path" = ".githooks" ]; then
-    hooks_dir="$repo_root/.githooks"
-else
-    hooks_dir="$repo_root/$current_hooks_path"
+elif [ "$current_hooks_path" != ".githooks" ]; then
     echo "install: using existing core.hooksPath=$current_hooks_path"
 fi
+hooks_rel="$(git -C "$repo_root" config --local --get core.hooksPath)"
+hooks_dir="$repo_root/$hooks_rel"
 
 mkdir -p "$hooks_dir"
 
@@ -39,7 +37,7 @@ echo "install: wrote $hooks_dir/conventional-commit-check.sh"
 # installs don't duplicate. Prepend (not append) because a trailing `exec`
 # in the existing hook would otherwise short-circuit the check.
 marker="# conventional-commit-check"
-invocation='./.githooks/conventional-commit-check.sh "$1" || exit 1'
+invocation="./${hooks_rel}/conventional-commit-check.sh \"\$1\" || exit 1"
 full_invocation="$invocation  $marker"
 hook="$hooks_dir/commit-msg"
 
@@ -57,12 +55,24 @@ elif grep -q -F -e "$marker" "$hook"; then
 else
     tmp="$(mktemp)"
     awk -v inv="$full_invocation" '
-        BEGIN { inserted = 0; in_prologue = 1 }
+        BEGIN { inserted = 0; in_prologue = 1; saw_set = 0 }
         {
-            if (in_prologue && (NR == 1 && $0 ~ /^#!/)) {
+            # Treat the leading run as prologue: shebang, then any mix of
+            # license/description comments and blank lines, then any set
+            # lines. Once a set line has been seen, subsequent comment lines
+            # are body content (e.g. a doc-comment above the function the
+            # comment documents), and our injection lands before them.
+            if (in_prologue && NR == 1 && $0 ~ /^#!/) {
+                print; next
+            }
+            if (in_prologue && $0 ~ /^[[:space:]]*$/) {
+                print; next
+            }
+            if (in_prologue && !saw_set && $0 ~ /^[[:space:]]*#/) {
                 print; next
             }
             if (in_prologue && $0 ~ /^[[:space:]]*set[[:space:]]/) {
+                saw_set = 1
                 print; next
             }
             if (in_prologue && !inserted) {
@@ -88,7 +98,6 @@ else
     echo "install: prepended conventional-commit-check to existing $hook"
 fi
 
-active_hooks_path="$(git -C "$repo_root" config --local --get core.hooksPath)"
 cat <<EOF
 
 install: done.
@@ -101,13 +110,13 @@ Next steps:
 
        - JS/TS projects: add a 'prepare' script to package.json so it runs
          on every install:
-           "prepare": "git config --get core.hooksPath >/dev/null 2>&1 || git config core.hooksPath ${active_hooks_path}"
+           "prepare": "git config --get core.hooksPath >/dev/null 2>&1 || git config core.hooksPath ${hooks_rel}"
 
        - Python projects: invoke 'pre-commit install' as part of project
          setup (pyproject.toml dev extras, requirements-dev.txt, etc.).
 
        - Anything else: commit a scripts/setup.sh that runs:
-           git config core.hooksPath ${active_hooks_path}
+           git config core.hooksPath ${hooks_rel}
          and reference it once from the README.
 
      A bare "after cloning, run ..." line in CONTRIBUTING is the last resort
