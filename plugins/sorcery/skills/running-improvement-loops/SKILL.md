@@ -9,6 +9,8 @@ Scaffolds an `improvement/` directory at the root of the current repo with the s
 
 ## What to do
 
+> ⚠️ Read the **Caveats** below before installing — this skill runs Claude unattended with `--dangerously-skip-permissions`, auto-approving every tool call.
+
 Run the plugin's installer from the root of the user's current repo:
 
 ```bash
@@ -24,6 +26,12 @@ After the installer runs, **adapt the scaffolded `improvement/personas.json` to 
 - Strike a balance between variety and rotation speed. More personas means iterations stay fresh — each persona sees the repo in a different state, and `wildcard`'s "don't repeat the last N iterations" constraint has more elbow room. Fewer personas means meta-review personas (`checkin`) come around sooner. As a rule of thumb, 4-6 personas balances both; below 3 the rotation feels repetitive, above 8 `checkin` fires too rarely to catch drift.
 
 Read the repo's manifest (`package.json`, `pyproject.toml`, etc.), the full `README.md`, and a shallow directory scan to infer shape; then suggest concrete persona edits and apply them to `improvement/personas.json` if the user agrees.
+
+After editing, sanity-check the persona list — `personas.json` is a flat array, so the line numbers don't show persona names and an off-by-one in the array index can quietly drop the new entry into the wrong slot:
+
+```bash
+jq '.[] | .name' improvement/personas.json
+```
 
 ## How a loop iteration works
 
