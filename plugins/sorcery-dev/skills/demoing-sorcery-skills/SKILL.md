@@ -153,7 +153,7 @@ Walk one task through to done — fill the sections, then:
 ```bash
 "${CLAUDE_PLUGIN_ROOT}/../sorcery/llm-tasks.sh" done install-readme
 "${CLAUDE_PLUGIN_ROOT}/../sorcery/llm-tasks.sh" list
-"${CLAUDE_PLUGIN_ROOT}/../sorcery/llm-tasks.sh" clump
+"${CLAUDE_PLUGIN_ROOT}/../sorcery/llm-tasks.sh" archive
 ```
 
 Verify with `ls llm-tasks/ llm-tasks/completed/` — show `add-run-script.md` still pending and `install-readme.md` archived under a batch directory.

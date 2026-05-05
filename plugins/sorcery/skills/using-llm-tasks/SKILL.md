@@ -35,10 +35,10 @@ Pick the behavior from what the user is asking for:
 
 | User intent                              | What to do                                                                                      |
 |------------------------------------------|--------------------------------------------------------------------------------------------------|
-| "work the next task" / "Go!" / "continue" | Run `list`; open the first pending task; work it through the four sections; `done`; offer to `clump`. |
+| "work the next task" / "Go!" / "continue" | Run `list`; open the first pending task; work it through the four sections; `done`; offer to `archive`. |
 | "add a task for X"                       | Call `new <name>` with a short kebab-case name; stub the four sections from what the user told you. |
-| "I finished X"                           | Call `done <name>`. Don't clump automatically — the user may have more to mark done.            |
-| "archive the finished ones"              | Call `clump`.                                                                                    |
+| "I finished X"                           | Call `done <name>`. Don't archive automatically — the user may have more to mark done.          |
+| "archive the finished ones"              | Call `archive`.                                                                                  |
 | "run the task loop" / "drain the queue unattended" | Install `task-loop.sh` (see below); tell the user to run `./task-loop.sh` from the repo root. |
 
 ## Autonomous mode: `task-loop.sh`
@@ -83,14 +83,16 @@ EOF
 
 # mark done and archive
 ${CLAUDE_PLUGIN_ROOT}/llm-tasks.sh done install-observability
-${CLAUDE_PLUGIN_ROOT}/llm-tasks.sh clump
+${CLAUDE_PLUGIN_ROOT}/llm-tasks.sh archive
 ```
 
-Paths resolve against the git toplevel (falling back to `$PWD` outside a repo). Task filenames are kebab-case; no `.md` extension needed on the command line. Prefix an in-progress draft with `IGNORE-` to keep it out of `list` and `clump` until you're ready.
+Paths resolve against the git toplevel (falling back to `$PWD` outside a repo). Task filenames are kebab-case; no `.md` extension needed on the command line. Prefix an in-progress draft with `IGNORE-` to keep it out of `list` and `archive` until you're ready.
+
+`clump` is accepted as a deprecated alias for `archive` — older docs and shell history will keep working, but new docs and prompts should use `archive`.
 
 ## Batch numbering
 
-All tasks currently in `llm-tasks/` — pending or `DONE-` — share the open batch number. `clump` archives each `DONE-*.md` into `llm-tasks/completed/batch-N/` by its stamp. A new batch opens only after the previous is fully clumped, so several `new` calls in a row land in the same batch and can be worked and clumped together.
+All tasks currently in `llm-tasks/` — pending or `DONE-` — share the open batch number. `archive` moves each `DONE-*.md` into `llm-tasks/completed/batch-N/` by its stamp. A new batch opens only after the previous is fully archived, so several `new` calls in a row land in the same batch and can be worked and archived together.
 
 ## When not to use
 

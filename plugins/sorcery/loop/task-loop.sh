@@ -79,7 +79,7 @@ format_duration() {
 
 # Count pending LLM tasks: .md files directly in llm-tasks/ that are neither
 # DONE- nor IGNORE-. Matches the filing conventions in the using-llm-tasks
-# skill (pending files stay in llm-tasks/ root; DONE- get clumped into
+# skill (pending files stay in llm-tasks/ root; DONE- get archived into
 # completed/batch-N/; IGNORE- are drafts).
 count_pending() {
   [[ -d llm-tasks ]] || { echo 0; return; }
@@ -185,7 +185,7 @@ If iteration ≥ 2, \`tail -n 400 "\$TASK_LOOP_PREV_LOG_FILE"\` shows what the p
 1. List pending tasks (the skill will use \`llm-tasks.sh list\`).
 2. Pick the first pending one and work it through the four-section lifecycle (Initial Understanding → Tentative Plan → Implementation → Completion Notes).
 3. Mark it DONE via the skill (renames to \`DONE-<name>.md\`).
-4. After all pending tasks are done, archive the DONE-* files via the skill's clump flow (\`llm-tasks.sh clump\` → moves them to \`llm-tasks/completed/batch-N/\`).
+4. After all pending tasks are done, archive the DONE-* files via the skill's archive flow (\`llm-tasks.sh archive\` → moves them to \`llm-tasks/completed/batch-N/\`).
 5. Run the project's test command between tasks to catch regressions.
 6. Do **not** commit unless the user explicitly authorized it for this session (default: no auto-commits).
 

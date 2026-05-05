@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
-# llm-tasks — manage a repo's `llm-tasks/` directory (list / new / done / clump).
+# llm-tasks — manage a repo's `llm-tasks/` directory (list / new / done / archive).
 #
 # Usage:
 #   llm-tasks.sh list                    # print pending task paths (not DONE-, not IGNORE-)
 #   llm-tasks.sh new <name>              # create llm-tasks/<name>.md; stdin = body (optional)
 #   llm-tasks.sh done <name>             # rename llm-tasks/<name>.md -> DONE-<name>.md
-#   llm-tasks.sh clump                   # archive DONE-*.md into llm-tasks/completed/batch-N/
+#   llm-tasks.sh archive                 # move DONE-*.md into llm-tasks/completed/batch-N/
+#
+# `clump` is accepted as a deprecated alias for `archive` (the original verb).
 #
 # Content for `new` comes in over stdin — avoids shell-escaping headaches with
 # backticks, $vars, quotes, etc. Default template is used when stdin is a tty.
@@ -17,7 +19,7 @@
 #
 # Paths: `llm-tasks/` lives at the git toplevel (or $PWD outside a repo).
 # Batch numbers: auto-assigned. All pending tasks share the currently-open
-# batch; a new batch opens only after the previous one is fully clumped.
+# batch; a new batch opens only after the previous one is fully archived.
 
 set -euo pipefail
 
@@ -68,7 +70,7 @@ max_local_batch() {
 }
 
 # Batch number to stamp on a newly-created task. Stays at the open batch until
-# all tasks from it are clumped; then advances to max_completed + 1.
+# all tasks from it are archived; then advances to max_completed + 1.
 current_batch() {
   local local_max completed_max
   local_max="$(max_local_batch)"
@@ -105,7 +107,7 @@ TEMPLATE
 }
 
 cmd="${1:-}"
-[[ -n "$cmd" ]] || die "usage: llm-tasks.sh <list|new|done|clump> [args]"
+[[ -n "$cmd" ]] || die "usage: llm-tasks.sh <list|new|done|archive> [args]"
 shift || true
 
 case "$cmd" in
@@ -167,7 +169,7 @@ case "$cmd" in
     # Accept either "foo" or "DONE-foo" — normalize to the pending form.
     name="${name#DONE-}"
     # IGNORE-* files are drafts; refusing to rename one keeps them out of
-    # the DONE- / clump flow (matches the contract in using-llm-tasks).
+    # the DONE- / archive flow (matches the contract in using-llm-tasks).
     [[ "$name" == IGNORE-* ]] && die "refusing to 'done' an IGNORE- file: $name"
     src="$TASKS_DIR/$name.md"
     dst="$TASKS_DIR/DONE-$name.md"
@@ -176,7 +178,7 @@ case "$cmd" in
     echo "$dst"
     ;;
 
-  clump)
+  archive | clump)
     [[ -d "$TASKS_DIR" ]] || die "no llm-tasks/ directory at $PROJECT_ROOT"
     # Fallback batch for DONE- files missing a `batch:` line: the highest
     # existing batch number anywhere (local or completed), or 1 if none.
@@ -196,10 +198,10 @@ case "$cmd" in
       moved=$((moved + 1))
     done
     shopt -u nullglob
-    echo "[llm-tasks] clumped $moved file(s)"
+    echo "[llm-tasks] archived $moved file(s)"
     ;;
 
   *)
-    die "unknown command: $cmd (use list|new|done|clump)"
+    die "unknown command: $cmd (use list|new|done|archive)"
     ;;
 esac

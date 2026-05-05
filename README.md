@@ -134,7 +134,7 @@ A markdown-driven task workflow. Ask:
 
 > Set up an LLM task workflow for this repo.
 
-Claude scaffolds `llm-tasks/`, consults `following-best-practices` for a seed task, and drives the four-section lifecycle (Initial Understanding → Tentative Plan → Implementation → Completion Notes). Subsequent invocations handle `new`, `done`, and `clump` through a bundled script.
+Claude scaffolds `llm-tasks/`, consults `following-best-practices` for a seed task, and drives the four-section lifecycle (Initial Understanding → Tentative Plan → Implementation → Completion Notes). Subsequent invocations handle `new`, `done`, and `archive` through a bundled script.
 
 ## [`using-sf-symbols`](plugins/sorcery/skills/using-sf-symbols)
 
