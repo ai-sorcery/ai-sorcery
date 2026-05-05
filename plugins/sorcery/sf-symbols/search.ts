@@ -86,7 +86,7 @@ const QUERY_SYNONYMS: Record<string, string[]> = {
   ide: ["terminal", "chevron.left.forwardslash"],
   merge: ["arrow.triangle.merge"],
   programming: ["chevron.left.forwardslash", "curlybraces"],
-  repo: ["arrow.triangle.branch", "shippingbox"],
+  repo: ["arrow.triangle.branch"],
   shell: ["terminal", "command"],
 };
 
@@ -122,9 +122,13 @@ for (const [symbolName, keywords] of Object.entries(symbolIndex)) {
 
   for (const term of terms) {
     // For each term, accept either the term itself or one of its synonyms.
-    // The matching candidate (term or synonym) drives the score so synonym
-    // hits don't artificially outrank direct hits.
-    const candidates = [term, ...(QUERY_SYNONYMS[term] ?? [])];
+    // The matching candidate (term or synonym) drives the score, plus a
+    // synonym bonus so deliberate synonym hits beat incidental substring
+    // collisions in the widened catalog (e.g. searching "git" should
+    // surface `arrow.triangle.branch` ahead of `digitalcrown`, which
+    // contains "git" as a substring of "digital").
+    const synonyms = QUERY_SYNONYMS[term] ?? [];
+    const candidates = [term, ...synonyms];
     const matchedCandidate = candidates.find((c) => joined.includes(c));
     if (matchedCandidate === undefined) {
       allTermsMatch = false;
@@ -136,6 +140,9 @@ for (const [symbolName, keywords] of Object.entries(symbolIndex)) {
     else if (nameLC.includes(matchedCandidate)) score += 5;
     else if (keywordsLC.some((k) => k === matchedCandidate)) score += 3;
     else score += 1;
+    // Synonym bonus: nudges deliberate metaphors above incidental substring
+    // hits without overtaking literal segment matches in non-synonym queries.
+    if (matchedCandidate !== term) score += 3;
   }
 
   if (allTermsMatch) {
@@ -155,7 +162,7 @@ if (shown.length === 0) {
   console.log("know the symbol name, pass it directly to sf-symbol-to-svg.swift —");
   console.log("the conversion script does not depend on the search index.");
   console.log("");
-  console.log("Common engineering glyphs the search misses:");
+  console.log("Engineering glyphs worth knowing by name:");
   console.log("  chevron.left.forwardslash.chevron.right  (code / </>)");
   console.log("  curlybraces                              (code blocks)");
   console.log("  terminal                                 (CLI / shell)");
