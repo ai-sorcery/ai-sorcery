@@ -308,11 +308,11 @@ Verify with `ls improvement/` and `jq '.[] | .name' improvement/personas.json`.
 
 #### Land the loop infra as its own commit
 
-`improvement/finish.sh` runs `git add -A` at the end of every iteration, so anything still uncommitted when the loop starts gets folded into the first iteration's commit. Land the loop scaffolding now to keep iteration commits clean. Steps 6 and 7 already committed their hook entries, so this commit only carries the loop's own files:
+`improvement/finish.sh` runs `git add -A` at the end of every iteration, so anything still uncommitted when the loop starts gets folded into the first iteration's commit. Land the loop scaffolding now to keep iteration commits clean. Steps 6 and 7 already committed their hook entries, so this commit carries the loop infra plus step 2's still-untracked `.claude/` files (the SessionStart hook script and the `settings.json` it was wired into):
 
 ```bash
 git status                                     # double-check nothing else is pending
-git add improvement/ .claude/settings.json
+git add improvement/ .claude/
 git commit -m "chore(loop): install improvement loop"
 ```
 
