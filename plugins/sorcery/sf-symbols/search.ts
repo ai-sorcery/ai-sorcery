@@ -16,8 +16,15 @@
 
 import { $ } from "bun";
 
+// `symbol_search.plist` is keyword-indexed but only covers ~3189 of the ~9184
+// shipping symbols — common names like `terminal` and the entire
+// `chevron.left.forwardslash.*` family aren't there. `name_availability.plist`
+// is the authoritative full-catalog list. Merging both gives every symbol a
+// hit on its own name plus whatever keywords the curated index provides.
 const SEARCH_PLIST =
   "/System/Library/CoreServices/CoreGlyphs.bundle/Contents/Resources/symbol_search.plist";
+const NAME_PLIST =
+  "/System/Library/CoreServices/CoreGlyphs.bundle/Contents/Resources/name_availability.plist";
 
 const args = process.argv.slice(2);
 const limitIdx = args.indexOf("--limit");
@@ -54,16 +61,51 @@ if (process.platform !== "darwin") {
   process.exit(2);
 }
 
-if (!(await Bun.file(SEARCH_PLIST).exists())) {
-  console.error(`sf-symbol-search: catalog not found at ${SEARCH_PLIST}`);
-  console.error("This file is part of CoreGlyphs.bundle and should be present on any modern macOS.");
-  process.exit(2);
+for (const path of [SEARCH_PLIST, NAME_PLIST]) {
+  if (!(await Bun.file(path).exists())) {
+    console.error(`sf-symbol-search: catalog not found at ${path}`);
+    console.error("This file is part of CoreGlyphs.bundle and should be present on any modern macOS.");
+    process.exit(2);
+  }
 }
 
+// Apple's curated keywords are sparse for some engineering concepts — a
+// search for "code" returns only QR/barcode glyphs, not the obvious
+// `chevron.left.forwardslash.chevron.right`. This table maps a few common
+// terms to additional substrings to OR into the per-term match. Each value
+// is treated as a substring against the joined name+keyword haystack, so
+// partial symbol names work (e.g. "chevron.left.forwardslash" matches
+// `chevron.left.forwardslash.chevron.right`).
+const QUERY_SYNONYMS: Record<string, string[]> = {
+  branch: ["arrow.triangle.branch"],
+  cli: ["terminal", "chevron.left.forwardslash"],
+  code: ["chevron.left.forwardslash", "curlybraces"],
+  command: ["terminal", "command"],
+  fork: ["arrow.triangle.branch"],
+  git: ["arrow.triangle.branch", "arrow.triangle.merge"],
+  ide: ["terminal", "chevron.left.forwardslash"],
+  merge: ["arrow.triangle.merge"],
+  programming: ["chevron.left.forwardslash", "curlybraces"],
+  repo: ["arrow.triangle.branch", "shippingbox"],
+  shell: ["terminal", "command"],
+};
+
 // `plutil -convert json -o -` round-trips a binary plist to JSON on stdout
-// without writing to disk. The catalog maps symbol-name -> [keywords].
-const result = await $`plutil -convert json -o - ${SEARCH_PLIST}`.text();
-const symbolIndex: Record<string, string[]> = JSON.parse(result);
+// without writing to disk. Build the search index by union: every name from
+// name_availability.plist gets an entry; keywords come from symbol_search.plist
+// if present, else an empty array.
+const searchJson = await $`plutil -convert json -o - ${SEARCH_PLIST}`.text();
+const searchKeywords: Record<string, string[]> = JSON.parse(searchJson);
+
+const namesJson = await $`plutil -convert json -o - ${NAME_PLIST}`.text();
+const allNames = Object.keys(
+  (JSON.parse(namesJson) as { symbols: Record<string, unknown> }).symbols,
+);
+
+const symbolIndex: Record<string, string[]> = {};
+for (const name of allNames) {
+  symbolIndex[name] = searchKeywords[name] ?? [];
+}
 
 const terms = query.split(/\s+/);
 
@@ -79,15 +121,20 @@ for (const [symbolName, keywords] of Object.entries(symbolIndex)) {
   let allTermsMatch = true;
 
   for (const term of terms) {
-    if (!joined.includes(term)) {
+    // For each term, accept either the term itself or one of its synonyms.
+    // The matching candidate (term or synonym) drives the score so synonym
+    // hits don't artificially outrank direct hits.
+    const candidates = [term, ...(QUERY_SYNONYMS[term] ?? [])];
+    const matchedCandidate = candidates.find((c) => joined.includes(c));
+    if (matchedCandidate === undefined) {
       allTermsMatch = false;
       break;
     }
     // Exact name segment match scores highest (e.g. "bolt" matching "bolt.fill"
     // beats "bolt" merely appearing inside "lightning_bolt_keyword").
-    if (nameLC.split(".").some((seg) => seg === term)) score += 10;
-    else if (nameLC.includes(term)) score += 5;
-    else if (keywordsLC.some((k) => k === term)) score += 3;
+    if (nameLC.split(".").some((seg) => seg === matchedCandidate)) score += 10;
+    else if (nameLC.includes(matchedCandidate)) score += 5;
+    else if (keywordsLC.some((k) => k === matchedCandidate)) score += 3;
     else score += 1;
   }
 
@@ -103,6 +150,18 @@ const shown = matches.slice(0, limit);
 
 if (shown.length === 0) {
   console.log(`No symbols found for "${query}"`);
+  console.log("");
+  console.log("Apple's curated keywords don't cover every concept. If you already");
+  console.log("know the symbol name, pass it directly to sf-symbol-to-svg.swift —");
+  console.log("the conversion script does not depend on the search index.");
+  console.log("");
+  console.log("Common engineering glyphs the search misses:");
+  console.log("  chevron.left.forwardslash.chevron.right  (code / </>)");
+  console.log("  curlybraces                              (code blocks)");
+  console.log("  terminal                                 (CLI / shell)");
+  console.log("  arrow.triangle.branch                    (git branch / fork)");
+  console.log("");
+  console.log("Browse the full catalog visually with `brew install --cask sf-symbols`.");
   process.exit(0);
 }
 
