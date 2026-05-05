@@ -154,6 +154,18 @@ After the semantic pass:
 
 The breadcrumbs, header, footer, reviews, related grid, and the strike-through price all dropped — the test asserts on none of them. The `<main>` and `<article class="product">` ancestors stayed because the parser likely walks through them to reach the title and price (a `document.querySelector("main .product .product-title")` style traversal). When in doubt, err on the side of trimming more rather than less — the original is preserved, so any over-trim is recoverable by re-running this pass with looser criteria.
 
+#### Common further-strip targets
+
+The mechanical pass can only remove noise it knows is *always* noise. On content-heavy pages, that's a small fraction of total bytes — a Wikipedia article, for example, often loses only ~10% of lines because almost every element is real content from the parser's perspective. The semantic pass picks up where the mechanical one stops; these patterns recur often enough to be worth scanning for first.
+
+- **Wikipedia / MediaWiki.** Drop `nav`, `.navbox`, `.infobox` (unless the test asserts on it), `#toc` and `.toc`, `.references` / `.reflist`, `.mw-editsection`, `.mw-jump-link`, `.mw-empty-elt`, `.hatnote`, `.thumb`, footer `.printfooter`, the language-list `#p-lang`, and anything else under the `mw-` prefix the test doesn't read. The article body lives in `.mw-parser-output`; everything outside it is chrome.
+- **Long-form blogs and docs.** Strip comment threads (`#disqus_thread`, `.comments`), share widgets, related-posts grids, sidebar TOCs (unless the test reads the TOC), author bio cards, newsletter sign-up modals, and footer link farms.
+- **E-commerce listings and detail pages.** Review widgets, "you might also like" carousels, breadcrumbs (unless asserted on), filter sidebars, recently-viewed grids, and footer link farms (shipping, returns, careers, etc.).
+- **News articles.** Subscription paywalls and modals, related-articles rails, social-share rails, comment counters, byline metadata not under test, and inline ad slots (`.ad`, `[data-ad-slot]`, `iframe`).
+- **Vendor docs and SDK references.** Version selectors, locale switchers, API-key prompts, search bars, dark-mode toggles, "edit on GitHub" links, sidebar nav (unless the test walks it).
+
+The originals are not edited; the further-strip operates on the test-facing copy only.
+
 ### Persisting hand-edits across re-captures
 
 When a fixture is re-captured (the source page changed, you want to verify against the latest), running `capture.sh` again with the same URL and base path overwrites the originals and stamps a new `capturedAt`. The mechanical strip is deterministic — re-running `strip.ts` reproduces the same baseline. **The LLM pass is not deterministic**, so the test-facing fixture must be re-trimmed against the current test after every re-capture.
