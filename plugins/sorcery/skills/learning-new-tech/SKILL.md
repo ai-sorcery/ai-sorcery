@@ -24,7 +24,7 @@ If the user's repo already has a `learning/` directory with a different topic, a
 
 In a single message, do all of this:
 
-1. **Read the room.** Ask one or two short questions about prior experience: "Have you used a similar tech before?" / "Any specific goal — a side project you want to ship?" Skip if context is already clear from earlier turns.
+1. **Read the room.** Ask one or two short questions about prior experience: "Have you used a similar tech before?" / "Any specific goal — a side project you want to ship?" If the user's first message already states their prior experience and goal (e.g. "I've used Node before, I want a small CLI"), skip the questions and go straight to step 2 — re-asking what was just answered burns trust.
 2. **Build the outline.** Write `learning/OUTLINE.md` with 10-15 milestones from "hello world" to a small real project. The outline names ideas, not lesson files — it's a map, not a manifest. Mark it "Subject to revision."
 3. **Seed NOTES.md.** Write `learning/NOTES.md` with what the user told you they already know, the start date, and an empty "Lessons completed" section.
 4. **Create lesson 01 only.** Build `learning/01-<short-kebab-topic>/` with `README.md`, `start.sh` (executable), and `score.sh` (executable). The lesson covers the first outline milestone, scaled to the user's stated experience. Lesson directory numbers are always two-digit zero-padded — `01` through `09`, then `10`, `11`, …, `99`.
