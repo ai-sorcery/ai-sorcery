@@ -40,6 +40,8 @@ Click the image to watch the YouTube video that demonstrates nearly every skill.
 
 ## [`capturing-test-fixtures`](plugins/sorcery/skills/capturing-test-fixtures)
 
+[▶ video at 7m:43s](https://www.youtube.com/watch?v=TBQKR9ZO9zc&t=463s)
+
 Captures real-world web pages as test fixtures with provenance. Ask:
 
 > Capture this page as a fixture under `tests/fixtures/products/listing`: https://example.com/products/123
@@ -47,6 +49,8 @@ Captures real-world web pages as test fixtures with provenance. Ask:
 Drops three artifacts per fixture: the raw original (never modified after capture), a `.meta.json` companion (source URL, capture timestamp, capture method, notes), and a simplified version tests load fast. Simplification splits into a script-driven mechanical strip (always-safe noise removal) and an LLM-driven semantic trim (drop everything irrelevant to the specific test). Supports `--render` for JS-heavy pages via Playwright.
 
 ## [`claiming-authorship`](plugins/sorcery/skills/claiming-authorship)
+
+[▶ video at 8m:37s](https://www.youtube.com/watch?v=TBQKR9ZO9zc&t=517s)
 
 Drops `./me.sh` at your repo root. Ask:
 
@@ -56,6 +60,8 @@ Running `./me.sh` rewrites the last 5 commits so their author and committer fiel
 
 ## [`enforcing-periodic-upgrades`](plugins/sorcery/skills/enforcing-periodic-upgrades)
 
+[▶ video at 3m:32s](https://www.youtube.com/watch?v=TBQKR9ZO9zc&t=212s)
+
 Installs a self-contained pre-commit check that refuses commits when any lockfile in the repo has not been touched in more than `STALE_DAYS` days (default 7). Ask:
 
 > Set up a periodic-upgrades hook in this repo.
@@ -63,6 +69,8 @@ Installs a self-contained pre-commit check that refuses commits when any lockfil
 Recognises lockfiles for bun, npm, yarn, pnpm, cargo, go, bundler, poetry, uv, pipenv, composer, swiftpm, and mix. Bypass per-commit with `STALE_DAYS=14 git commit ...`, reset the clock with `touch <lockfile>`, or skip entirely with `git commit --no-verify`. Walks through the backup → upgrade → test → record → commit cycle when the hook fires.
 
 ## [`following-best-practices`](plugins/sorcery/skills/following-best-practices)
+
+[▶ video at 1m:52s](https://www.youtube.com/watch?v=TBQKR9ZO9zc&t=112s)
 
 A catalog of language-agnostic practices that compound if installed day one. Ask:
 
@@ -72,6 +80,8 @@ Claude scans against the list (README, starter scripts, observability, persisted
 
 ## [`guarding-commits`](plugins/sorcery/skills/guarding-commits)
 
+[▶ video at 2m:56s](https://www.youtube.com/watch?v=TBQKR9ZO9zc&t=176s)
+
 Installs a self-contained pre-commit hook that blocks any commit whose staged diff adds a line containing a string from a git-ignored `commit-disallowed-terms.txt`. Ask:
 
 > Set up a disallowed-terms commit guard in this repo.
@@ -79,6 +89,8 @@ Installs a self-contained pre-commit hook that blocks any commit whose staged di
 Useful for personal emails, obvious secret prefixes, and `DO NOT COMMIT` markers.
 
 ## [`launching-claude`](plugins/sorcery/skills/launching-claude)
+
+[▶ video at 1m:37s](https://www.youtube.com/watch?v=TBQKR9ZO9zc&t=97s)
 
 Drops a `claude.sh` at your repo root. Ask:
 
@@ -92,6 +104,8 @@ Run it with `./claude.sh`. It sets:
 - `--model claude-opus-4-7`
 
 ## [`learning-new-tech`](plugins/sorcery/skills/learning-new-tech)
+
+[▶ video at 7m:13s](https://www.youtube.com/watch?v=TBQKR9ZO9zc&t=433s)
 
 A coaching workflow for learning a programming language, framework, or platform by doing. Ask:
 
@@ -108,6 +122,8 @@ Scaffolds a Tart-based macOS VM into the current repo with Claude Code and a sma
 After you answer some setup questions, it copies scripts into `./claude-vm/`. Run `./setup.sh` once to install Tart and clone the macOS image, then `./run.sh` to boot the VM and open Screen Sharing. Apple Silicon only.
 
 ## [`running-improvement-loops`](plugins/sorcery/skills/running-improvement-loops)
+
+[▶ video at 4m:42s](https://www.youtube.com/watch?v=TBQKR9ZO9zc&t=282s)
 
 Installs an autonomous improvement loop under `./improvement/`. Ask:
 
@@ -127,6 +143,8 @@ Runs each sibling installer in order: `./claude.sh`, `./me.sh`, the conventional
 
 ## [`summarizing-sessions`](plugins/sorcery/skills/summarizing-sessions)
 
+[▶ video at 4m:09s](https://www.youtube.com/watch?v=TBQKR9ZO9zc&t=249s)
+
 Wires a SessionEnd hook that drops a dated markdown summary of each session into `~/LLM_Summaries/YYYY-MM-DD/`. Ask:
 
 > Set up session summaries for this repo.
@@ -134,6 +152,8 @@ Wires a SessionEnd hook that drops a dated markdown summary of each session into
 The hook self-forks into the background, skips subagent transcripts, and calls Haiku with a forced JSON schema so each summary is a parseable `{title, body}` pair. Point an Obsidian vault at `~/LLM_Summaries/` to read back the daily log with no extra tooling.
 
 ## [`using-dot-claude`](plugins/sorcery/skills/using-dot-claude)
+
+[▶ video at 1m:06s](https://www.youtube.com/watch?v=TBQKR9ZO9zc&t=66s)
 
 Claude Code blocks writes under `.claude/` by default. With this skill installed, just ask:
 
@@ -143,6 +163,8 @@ The write gets routed through a bundled bash script and lands in place.
 
 ## [`using-llm-tasks`](plugins/sorcery/skills/using-llm-tasks)
 
+[▶ video at 2m:12s](https://www.youtube.com/watch?v=TBQKR9ZO9zc&t=132s)
+
 A markdown-driven task workflow. Ask:
 
 > Set up an LLM task workflow for this repo.
@@ -150,6 +172,8 @@ A markdown-driven task workflow. Ask:
 Claude scaffolds `llm-tasks/`, consults `following-best-practices` for a seed task, and drives the four-section lifecycle (Initial Understanding → Tentative Plan → Implementation → Completion Notes). Subsequent invocations handle `new`, `done`, and `archive` through a bundled script.
 
 ## [`using-sf-symbols`](plugins/sorcery/skills/using-sf-symbols)
+
+[▶ video at 7m:00s](https://www.youtube.com/watch?v=TBQKR9ZO9zc&t=420s)
 
 Drops two scripts under `scripts/` that turn Apple's free SF Symbols catalog into a no-friction icon source. Ask:
 
