@@ -12,7 +12,11 @@ It will get you set up with a macOS VM, help you follow software engineering bes
 
 And then use AI Sorcery.
 
-![AI Sorcery hero illustration](assets/images/ai-sorcery-banner.webp)
+# Demo YouTube Video
+
+[![AI Sorcery demo video](assets/images/ai-sorcery-demo-frame-designed.webp)](https://www.youtube.com/watch?v=TBQKR9ZO9zc)
+
+Click the image to watch the YouTube video that demonstrates nearly every skill.
 
 # Examples
 
