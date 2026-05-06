@@ -30,6 +30,16 @@ export const SKILLS: DemoSkill[] = [
       "Demo this skill from the host instead.",
   },
   { name: "running-improvement-loops", status: "covered" },
+  {
+    name: "scaffolding-repos",
+    status: "skipped",
+    reason:
+      "Composed of installers exercised individually elsewhere in the " +
+      "runbook (launching-claude, claiming-authorship, guarding-commits, " +
+      "writing-commit-messages, enforcing-periodic-upgrades, " +
+      "summarizing-sessions). A standalone walkthrough would just re-run " +
+      "those installers without showing anything new.",
+  },
   { name: "summarizing-sessions",      status: "covered" },
   { name: "using-dot-claude",          status: "covered" },
   { name: "using-llm-tasks",           status: "covered" },

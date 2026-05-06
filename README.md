@@ -30,6 +30,7 @@ Click the image to watch the YouTube video that demonstrates nearly every skill.
 - [`learning-new-tech`](#learning-new-tech)
 - [`running-claude-in-a-vm`](#running-claude-in-a-vm)
 - [`running-improvement-loops`](#running-improvement-loops)
+- [`scaffolding-repos`](#scaffolding-repos)
 - [`summarizing-sessions`](#summarizing-sessions)
 - [`using-dot-claude`](#using-dot-claude)
 - [`using-llm-tasks`](#using-llm-tasks)
@@ -115,6 +116,14 @@ Installs an autonomous improvement loop under `./improvement/`. Ask:
 Running `./improvement/loop.sh` launches Claude repeatedly — one iteration at a time — under a four-subprocess watchdog (wall-clock SIGTERM + runtime ticker + quit-key listener + result-event grace period), rotating through personas (test-strengthener, code-improver, checkin, wildcard by default). Each iteration reads `LOOP.md`, picks up a persona, does the work, appends to the changelogs, and exits. Stop with `q`/`s`/`h` or `touch stop.txt`.
 
 The `using-llm-tasks` skill has a companion mode (`./task-loop.sh`) that drains the `llm-tasks/` queue under the same watchdog — ask "set up the task loop" to install it.
+
+## [`scaffolding-repos`](plugins/sorcery/skills/scaffolding-repos)
+
+Bundles the universal-baseline sorcery installers behind one entry point. Ask:
+
+> Scaffold this repo with the sorcery defaults.
+
+Runs each sibling installer in order: `./claude.sh`, `./me.sh`, the conventional-commits / disallowed-terms / commit-style guards, the periodic-upgrades pre-commit, and the SessionEnd summary hook. Every step is idempotent, so re-runs only fill in what's missing. Specialized workflows (LLM tasks, improvement loop, VM, learning tracks, fixture capture) are intentionally excluded — invoke those skills directly when the project needs them.
 
 ## [`summarizing-sessions`](plugins/sorcery/skills/summarizing-sessions)
 
