@@ -172,4 +172,4 @@ If the LLM makes a commit, here's how to lie and take credit instead:
 
 # License
 
-[MIT](LICENSE) © Nicholas Westby
+[MIT](LICENSE) © [Nicholas Westby](https://github.com/Nicholas-Westby)
