@@ -139,7 +139,7 @@ Bundles the universal-baseline sorcery installers behind one entry point. Ask:
 
 > Scaffold this repo with the sorcery defaults.
 
-Runs each sibling installer in order: `./claude.sh`, `./me.sh`, the conventional-commits / disallowed-terms / commit-style guards, the periodic-upgrades pre-commit, and the SessionEnd summary hook. Every step is idempotent, so re-runs only fill in what's missing. Specialized workflows (LLM tasks, improvement loop, VM, learning tracks, fixture capture) are intentionally excluded — invoke those skills directly when the project needs them.
+Runs each sibling installer in order: the conventional-commits / commit-style / disallowed-terms guards, the periodic-upgrades pre-commit, `./claude.sh`, `./me.sh`, and the SessionEnd summary hook. Every step is idempotent, so re-runs only fill in what's missing. Specialized workflows (LLM tasks, improvement loop, VM, learning tracks, fixture capture) are intentionally excluded — invoke those skills directly when the project needs them.
 
 ## [`summarizing-sessions`](plugins/sorcery/skills/summarizing-sessions)
 
