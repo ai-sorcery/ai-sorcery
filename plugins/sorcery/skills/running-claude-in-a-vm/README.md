@@ -14,6 +14,7 @@ claude-vm/
 ├── run.sh                  # boot the VM, open Screen Sharing, run vm-setup
 ├── vm-setup.sh             # in-VM provisioning (apps, prefs, shared folders)
 ├── teardown.sh             # stop and delete the VM
+├── upgrade.sh              # tart pull to refresh the cached macOS image
 ├── setup-dock.sh           # Dock cleanup (called by vm-setup.sh)
 └── setup-terminal-tabs.sh  # Terminal tabs per shared folder (called by vm-setup.sh)
 ```

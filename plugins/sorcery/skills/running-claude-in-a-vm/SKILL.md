@@ -55,6 +55,7 @@ Then overwrite `<subdir>/config.sh` with the user's answers, using the plain Wri
 - `run.sh` — boots the VM with VNC and shared-folder `--dir` flags built from `shared-folders.json`, opens Screen Sharing once the VM has an IP, then runs `vm-setup.sh` inside the booted VM.
 - `vm-setup.sh` — in-VM provisioning: installs each app in `APPS`, syncs time zone from host, applies preferences (dark mode, natural-scroll off, dimmer cursor), drops a "Fix Clipboard" AppleScript on the Desktop, configures Dock and (optionally) Terminal tabs, mounts shared folders. When `claude-code` is installed, it also installs and enables the `superpowers` plugin from `anthropics/claude-plugins-official`. Idempotent on re-run.
 - `teardown.sh` — `tart stop` + `tart delete` the VM named in `config.sh`.
+- `upgrade.sh` — `tart pull` the image in `config.sh` to refresh the host-side cache. Doesn't touch any existing VM. Needed because `tart clone` only consults the registry on first pull, so later `teardown.sh && setup.sh` cycles silently reuse the stale cached image otherwise.
 
 ## Configuration knobs (config.sh)
 

@@ -29,6 +29,7 @@ declare -a files=(
   "run.sh"
   "vm-setup.sh"
   "teardown.sh"
+  "upgrade.sh"
   "setup-dock.sh"
   "setup-terminal-tabs.sh"
   "fix-cache.sh"
