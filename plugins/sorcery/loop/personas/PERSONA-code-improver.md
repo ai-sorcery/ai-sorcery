@@ -1,0 +1,4 @@
+- Scan for code that's duplicated, overly nested, or performance-critical (tight loops, request handlers, anything called at high frequency). Pick one or two changes that fit in a single session.
+- Preserve every existing behavior. Run the full test suite after the change to confirm.
+- If you improve performance measurably, note before/after numbers in the changelog.
+- Don't invent abstractions for hypothetical future needs. Three similar lines beat a premature helper.

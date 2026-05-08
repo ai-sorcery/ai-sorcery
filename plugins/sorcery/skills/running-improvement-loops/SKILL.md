@@ -19,18 +19,26 @@ Run the plugin's installer from the root of the user's current repo:
 
 That copies the canonical loop scripts into `./improvement/`, seeds empty `SUCCINCT-CHANGELOG.md` and `VERBOSE-CHANGELOG.md` files, and wires a PostToolUse wrap-up hook into `.claude/settings.json` via `dot-claude.sh`. Safe to run twice — the installer skips files that already exist and leaves `.claude/settings.json` alone if the hook entry is already present.
 
-After the installer runs, **adapt the scaffolded `improvement/personas.json` to the specific repo**. The default set is four general-purpose personas; the ideal set varies by project:
+After the installer runs, **adapt the scaffolded personas to the specific repo**. The default set is four general-purpose personas; the ideal set varies by project. Each persona has two pieces:
+
+- An entry in `improvement/personas.json` with `id`, `name`, `description`, and the optional `showGlobalHistory`. This file controls the rotation order.
+- A markdown file at `improvement/personas/PERSONA-<id>.md` with that persona's instructions. The `id` field links the JSON entry to its markdown file.
+
+Suggestions for tuning:
 
 - If the repo has a UI and Playwright is configured, add an `e2e-verifier` persona that drives the app in a real browser.
 - If the repo has an obvious domain focus (scoring pipeline, data ingestion, etc.), add a domain-specialist persona.
 - Strike a balance between variety and rotation speed. More personas means iterations stay fresh — each persona sees the repo in a different state, and `wildcard`'s "don't repeat the last N iterations" constraint has more elbow room. Fewer personas means meta-review personas (`checkin`) come around sooner. As a rule of thumb, 4-6 personas balances both; below 3 the rotation feels repetitive, above 8 `checkin` fires too rarely to catch drift.
 
-Read the repo's manifest (`package.json`, `pyproject.toml`, etc.), the full `README.md`, and a shallow directory scan to infer shape; then suggest concrete persona edits and apply them to `improvement/personas.json` if the user agrees.
+Read the repo's manifest (`package.json`, `pyproject.toml`, etc.), the full `README.md`, and a shallow directory scan to infer shape; then suggest concrete persona edits — both the `personas.json` entries and matching `personas/PERSONA-<id>.md` files — and apply them if the user agrees.
 
-After editing, sanity-check the persona list — `personas.json` is a flat array, so the line numbers don't show persona names and an off-by-one in the array index can quietly drop the new entry into the wrong slot:
+After editing, sanity-check the persona list — `personas.json` is a flat array, so the line numbers don't show persona names and an off-by-one in the array index can quietly drop the new entry into the wrong slot. Also confirm every id in the JSON has a matching markdown file:
 
 ```bash
 jq '.[] | .name' improvement/personas.json
+jq -r '.[].id' improvement/personas.json | while read -r id; do
+  test -f "improvement/personas/PERSONA-$id.md" || echo "missing: PERSONA-$id.md"
+done
 ```
 
 ## How a loop iteration works
@@ -52,9 +60,9 @@ Skip the inter-iteration wait: press `c` or `n` during the `LOOP_WAIT` countdown
 
 ## How the personas rotate
 
-`improvement/counter.txt` holds a monotonically increasing integer. `start.sh` picks persona `counter % len(personas)` from `improvement/personas.json`, writes `.state.json` with the assignment, and bumps the counter. Claude reads the persona's instructions from stdout and acts on them. `finish.sh` clears the state and appends to the changelogs.
+`improvement/counter.txt` holds a monotonically increasing integer. `start.sh` picks persona `counter % len(personas)` from `improvement/personas.json`, loads the persona's instructions from `improvement/personas/PERSONA-<id>.md`, writes `.state.json` with the assignment, and bumps the counter. Claude reads the persona's description and instructions from stdout and acts on them. `finish.sh` clears the state and appends to the changelogs.
 
-Adding a persona mid-loop is fine: edit `personas.json` and the next iteration picks up the new list. Removing one renumbers the cycle.
+Adding a persona mid-loop is fine: add the entry to `personas.json`, drop a matching `personas/PERSONA-<id>.md` next to the others, and the next iteration picks up the new list. Removing a persona (delete from JSON; the markdown file can stay or go) renumbers the cycle.
 
 Optional persona field `showGlobalHistory: N` injects a summary of the last N iterations across all personas into that persona's prompt, under the heading "Last N Iterations (All Personas)". Set it on personas whose instructions reference the recent global history — e.g. the default `wildcard` uses 20 to enforce its "don't repeat the last 20 iterations" rule. Omit the field to skip the injection.
 

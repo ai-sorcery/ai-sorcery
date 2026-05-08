@@ -1,0 +1,3 @@
+- Run the project's test command (./test.sh, npm test, bun test, pytest, go test — whatever this repo uses). If a wall-clock ceiling is enforced, verify it's still holding and optimize if close.
+- Find coverage gaps: functions or modules with zero tests, or paths that only the happy case touches. Add meaningful tests — not just call-site smoke checks.
+- Never weaken an existing test. Only strengthen, optimize, or merge closely-related ones.

@@ -302,9 +302,9 @@ Load the skill before exercising it — `Skill: sorcery:running-improvement-loop
 
 That copies the loop scripts into `improvement/`, seeds empty `SUCCINCT-CHANGELOG.md` and `VERBOSE-CHANGELOG.md`, and wires the wrap-up hook into `.claude/settings.json`.
 
-Then adapt `improvement/personas.json` to the snippet-box scenario. The default four personas (test-strengthener, code-improver, checkin, wildcard) are general-purpose; for snippet-box add a domain-specialist persona ("storage-layer-improver") that focuses on the JSON-on-disk store. Edit the file directly with the `Read` and `Write` tools.
+Then adapt the personas to the snippet-box scenario. The default four personas (test-strengthener, code-improver, checkin, wildcard) are general-purpose; for snippet-box add a domain-specialist persona ("storage-layer-improver") that focuses on the JSON-on-disk store. Two edits per persona: append the entry to `improvement/personas.json` (id/name/description) and create `improvement/personas/PERSONA-storage-layer-improver.md` with the instruction bullets. Edit the files directly with the `Read` and `Write` tools.
 
-Verify with `ls improvement/` and `jq '.[] | .name' improvement/personas.json`.
+Verify with `ls improvement/personas/` and `jq '.[] | .name' improvement/personas.json`.
 
 #### Land the loop infra as its own commit
 

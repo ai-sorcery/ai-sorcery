@@ -75,10 +75,19 @@ function startAssign() {
   const [personasFile, counterStr, timestamp, stateFile, counterFile, scriptDir] = args
   const counter = parseInt(counterStr!, 10)
   const personas = readJSON<
-    Array<{ id: string; name: string; description: string; instructions: string[]; showGlobalHistory?: number }>
+    Array<{ id: string; name: string; description: string; showGlobalHistory?: number }>
   >(personasFile!)
   const index = counter % personas.length
   const p = personas[index]!
+
+  // Persona instructions live in personas/PERSONA-<id>.md, separately from
+  // the JSON catalog so they can be edited as plain markdown.
+  const personaMdPath = join(scriptDir!, "personas", `PERSONA-${p.id}.md`)
+  if (!existsSync(personaMdPath)) {
+    console.error(`Missing persona instructions file: ${personaMdPath}`)
+    process.exit(1)
+  }
+  const instructionsMd = readFileSync(personaMdPath, "utf-8").trimEnd()
 
   writeFileSync(
     stateFile!,
@@ -115,7 +124,7 @@ function startAssign() {
   console.log(p.description)
   console.log()
   console.log("Instructions:")
-  p.instructions.forEach((step, i) => console.log(`  ${i + 1}. ${step}`))
+  console.log(instructionsMd)
 
   const nextP = personas[(index + 1) % personas.length]!
   console.log(`\nNext persona in rotation: ${nextP.name}`)

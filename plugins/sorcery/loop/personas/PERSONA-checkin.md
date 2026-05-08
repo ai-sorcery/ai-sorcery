@@ -1,0 +1,7 @@
+- Read improvement/SUCCINCT-CHANGELOG.md for the recent iteration summaries and improvement/VERBOSE-CHANGELOG.md for details on anything that caught your eye.
+- Ask: are iterations producing meaningful improvements? Which personas are most/least productive? Is the project actually moving forward, or just churning?
+- If improvement/AXIOMS.md exists, scan it for entries that are stale, superseded, or contradicted by recent work. Prune or update as needed. Add new axioms from recent learnings.
+- If personas are drifting (instructions too vague, scopes overlap, one persona is doing all the work), tune their instructions in `improvement/personas/PERSONA-<id>.md`, or adjust the rotation in `improvement/personas.json`.
+- Ship a concrete change every iteration. 'Everything looks good' is not a valid outcome — it means you haven't looked hard enough.
+- If nothing is obviously drifting, pivot from verifying existing behavior to finding improvements. Candidates: a persona whose instructions could be sharpened, a pattern worth codifying as a new axiom, a gap in the changelog format, a new persona worth drafting, a piece of the loop infrastructure that would benefit from refinement.
+- Write an honest assessment in the changelog — including what you changed and why.

@@ -76,6 +76,23 @@ for entry in "${files[@]}"; do
   copied=$(( copied + 1 ))
 done
 
+# Copy the persona instruction markdown files into improvement/personas/.
+# Each file is one persona's instructions, keyed by id (PERSONA-<id>.md).
+mkdir -p "$improvement_dir/personas"
+for src in "$plugin_loop_dir/personas/"PERSONA-*.md; do
+  [[ -e "$src" ]] || continue
+  base="$(basename "$src")"
+  dst="$improvement_dir/personas/$base"
+  if [[ -e "$dst" ]]; then
+    echo "  skip (exists): improvement/personas/$base"
+    skipped=$(( skipped + 1 ))
+    continue
+  fi
+  cp "$src" "$dst"
+  echo "  copy: improvement/personas/$base"
+  copied=$(( copied + 1 ))
+done
+
 # Seed empty changelogs with the marker the helper inserts after.
 succinct="$improvement_dir/SUCCINCT-CHANGELOG.md"
 if [[ ! -e "$succinct" ]]; then
@@ -188,5 +205,5 @@ echo "     guarding-commits, claude.sh from launching-claude):"
 echo "       git status"
 echo "       git add improvement/ .claude/settings.json   # plus other paths"
 echo "       git commit -m 'chore(loop): install improvement loop'"
-echo "  2. Review improvement/personas.json and tune for this repo."
+echo "  2. Review improvement/personas.json and improvement/personas/PERSONA-*.md, tune for this repo."
 echo "  3. Run ./improvement/loop.sh."
