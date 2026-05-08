@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 #
 # check-update-staleness — refuse a commit when any lockfile in the repo has
-# not been touched in more than STALE_DAYS (default 7). The intent is to nudge
-# the next dependency-refresh sweep into happening before drift turns into a
-# debugging session.
+# not been touched in more than STALE_DAYS (default 7), plus a small per-clone
+# jitter so teammates aren't all nagged on the same day. The intent is to
+# nudge the next dependency-refresh sweep into happening before drift turns
+# into a debugging session.
 #
 # Self-contained: nothing outside the repository is referenced, so the hook
 # works for any dev who activates it — no dependency on the sorcery plugin
@@ -26,6 +27,17 @@ if ! [[ "$threshold_days" =~ ^[0-9]+$ ]]; then
     echo "[periodic-upgrades] STALE_DAYS must be a non-negative integer (got '$threshold_days')" >&2
     exit 2
 fi
+
+# Per-clone deterministic jitter spreads when teammates hit the threshold so
+# they don't all attempt upgrade sweeps on the same day. Hash a stable per-dev
+# identifier (user.email + hostname); modulo (threshold_days + 1) yields an
+# offset in [0, threshold_days], so the effective threshold lands in
+# [N, 2N] days. Same dev on same machine always picks the same offset, so
+# behaviour doesn't flap between commits.
+identity="$(git -C "$repo_root" config --get user.email 2>/dev/null || true)@$(hostname 2>/dev/null || echo unknown)"
+hash_hex=$(printf '%s' "$identity" | shasum | head -c 8)
+jitter_days=$(( 16#$hash_hex % (threshold_days + 1) ))
+effective_days=$(( threshold_days + jitter_days ))
 
 # Lockfiles by ecosystem. Add to this list when a new one matters; the script
 # silently no-ops in any repo where none of these are present.
@@ -50,7 +62,7 @@ else
 fi
 
 now=$(date +%s)
-threshold_seconds=$((threshold_days * 86400))
+threshold_seconds=$((effective_days * 86400))
 
 stale_lines=()
 found_any=0
@@ -82,7 +94,9 @@ cat >&2 <<MSG
 ==================================================================
 [periodic-upgrades] Stale dependencies detected
 ==================================================================
-The following lockfile(s) have not been touched in more than $threshold_days days:
+The following lockfile(s) have not been touched in more than $effective_days days
+(STALE_DAYS=$threshold_days + $jitter_days days per-clone jitter so teammates
+aren't all nagged on the same commit):
 
 $(printf '%s\n' "${stale_lines[@]}")
 

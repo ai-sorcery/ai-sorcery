@@ -7,6 +7,8 @@ description: Use when the user wants to install a pre-commit dependency-stalenes
 
 A self-contained pre-commit check that refuses commits when any lockfile at the repo root has not been touched in more than `STALE_DAYS` days (default 7). The intent is to drag the next dependency-refresh sweep forward in time, before drift turns into a debugging session.
 
+A small per-clone jitter — 0 to `STALE_DAYS` extra days, picked deterministically from a hash of `user.email` + hostname — is added on top, so teammates don't all hit the threshold on the same commit and stampede into a coordinated upgrade sweep. The effective threshold is between `STALE_DAYS` and `2 * STALE_DAYS` days; the same dev on the same machine always picks the same offset, so behaviour doesn't flap between commits.
+
 The check recognises lockfiles for bun, npm, yarn, pnpm, cargo, go modules, bundler, poetry, uv, pipenv, composer, swiftpm, and mix. It silently no-ops in any repo where none of those are present at the root. Subdirectory lockfiles (a typical monorepo with `apps/web/bun.lock`, `apps/api/Cargo.lock`) are not scanned — see *Caveats*.
 
 ## Installing
@@ -37,7 +39,10 @@ The hook prints:
 ==================================================================
 [periodic-upgrades] Stale dependencies detected
 ==================================================================
-The following lockfile(s) have not been touched in more than 7 days:
+The following lockfile(s) have not been touched in more than 11 days
+(STALE_DAYS=7 + 4 days per-clone jitter so teammates
+aren't all nagged on the same commit):
+
   bun.lock — last touched 12 days ago
 ...
 ```
@@ -107,8 +112,9 @@ Three escape hatches, in increasing severity:
 1. Walks a built-in list of lockfile names, looking for each in the repo root.
 2. If none are present, exits 0 silently — the hook is a no-op until the project introduces a lockfile the script recognises.
 3. For each lockfile that exists, computes age in seconds from its mtime (using `stat -f "%m"` on macOS, `stat -c "%Y"` elsewhere — picked once at startup, not per call).
-4. Collects every lockfile whose age exceeds `STALE_DAYS * 86400` seconds.
-5. If the collection is empty, exits 0. Otherwise, prints the list and the quick-path guidance and exits 1.
+4. Computes a per-clone jitter offset in `[0, STALE_DAYS]` from `sha1(user.email + "@" + hostname)` truncated to 32 bits, modulo `STALE_DAYS + 1`. Effective threshold is `(STALE_DAYS + offset) * 86400` seconds. The hash is deterministic per developer-on-machine, so the same dev sees the same threshold across commits while different devs are spread across a window twice as wide as `STALE_DAYS`.
+5. Collects every lockfile whose age exceeds the effective threshold.
+6. If the collection is empty, exits 0. Otherwise, prints the list and the quick-path guidance and exits 1.
 
 The check is **per-lockfile, fail-on-any** — in a polyglot repo, a stale Cargo.lock blocks a commit even if bun.lock is fresh. This matches the spirit of "enforce upgrades": the goal is to keep every ecosystem moving, not to let one ecosystem's activity mask another's drift. If a project has a deliberately-frozen lockfile (a vendored dependency, a pinned-by-policy build), the right response is to `touch` it on the days you've verified it's still intentionally pinned.
 
