@@ -7,7 +7,7 @@ description: Use when the user wants to install a pre-commit dependency-stalenes
 
 A self-contained pre-commit check that refuses commits when any lockfile at the repo root has not been touched in more than `STALE_DAYS` days (default 7). The intent is to drag the next dependency-refresh sweep forward in time, before drift turns into a debugging session.
 
-A small per-clone jitter — 0 to `STALE_DAYS` extra days, picked deterministically from a hash of `user.email` + hostname — is added on top, so teammates don't all hit the threshold on the same commit and stampede into a coordinated upgrade sweep. The effective threshold is between `STALE_DAYS` and `2 * STALE_DAYS` days; the same dev on the same machine always picks the same offset, so behaviour doesn't flap between commits.
+A small per-clone jitter — 0 to `STALE_DAYS` extra days, picked deterministically from a hash of `user.email` + hostname + ISO week — is added on top, so teammates don't all hit the threshold on the same commit and stampede into a coordinated upgrade sweep. The effective threshold is between `STALE_DAYS` and `2 * STALE_DAYS` days. The offset is stable within a calendar week — behaviour doesn't flap between commits — but reshuffles every Monday so the dev who's first in line rotates rather than always being the same person.
 
 The check recognises lockfiles for bun, npm, yarn, pnpm, cargo, go modules, bundler, poetry, uv, pipenv, composer, swiftpm, and mix. It silently no-ops in any repo where none of those are present at the root. Subdirectory lockfiles (a typical monorepo with `apps/web/bun.lock`, `apps/api/Cargo.lock`) are not scanned — see *Caveats*.
 
@@ -112,7 +112,7 @@ Three escape hatches, in increasing severity:
 1. Walks a built-in list of lockfile names, looking for each in the repo root.
 2. If none are present, exits 0 silently — the hook is a no-op until the project introduces a lockfile the script recognises.
 3. For each lockfile that exists, computes age in seconds from its mtime (using `stat -f "%m"` on macOS, `stat -c "%Y"` elsewhere — picked once at startup, not per call).
-4. Computes a per-clone jitter offset in `[0, STALE_DAYS]` from `sha1(user.email + "@" + hostname)` truncated to 32 bits, modulo `STALE_DAYS + 1`. Effective threshold is `(STALE_DAYS + offset) * 86400` seconds. The hash is deterministic per developer-on-machine, so the same dev sees the same threshold across commits while different devs are spread across a window twice as wide as `STALE_DAYS`.
+4. Computes a per-clone jitter offset in `[0, STALE_DAYS]` from `sha1(user.email + "@" + hostname + "@" + iso_week)` truncated to 32 bits, modulo `STALE_DAYS + 1`. Effective threshold is `(STALE_DAYS + offset) * 86400` seconds. The hash is deterministic per developer-on-machine-on-week, so the same dev sees the same threshold across commits inside a calendar week while different devs are spread across a window twice as wide as `STALE_DAYS`. The ISO week (`date +%G%V`) reshuffles assignments every Monday so the dev with offset 0 — first in line for upgrade-blocked commits — rotates instead of always being the same person.
 5. Collects every lockfile whose age exceeds the effective threshold.
 6. If the collection is empty, exits 0. Otherwise, prints the list and the quick-path guidance and exits 1.
 

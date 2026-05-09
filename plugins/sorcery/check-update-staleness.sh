@@ -30,11 +30,14 @@ fi
 
 # Per-clone deterministic jitter spreads when teammates hit the threshold so
 # they don't all attempt upgrade sweeps on the same day. Hash a stable per-dev
-# identifier (user.email + hostname); modulo (threshold_days + 1) yields an
-# offset in [0, threshold_days], so the effective threshold lands in
-# [N, 2N] days. Same dev on same machine always picks the same offset, so
-# behaviour doesn't flap between commits.
-identity="$(git -C "$repo_root" config --get user.email 2>/dev/null || true)@$(hostname 2>/dev/null || echo unknown)"
+# identifier (user.email + hostname) together with the current ISO week so
+# the offset reshuffles every Monday — without the week, the same dev would
+# always be first in the team's order and disproportionately catch the
+# upgrade-blocked commits. Modulo (threshold_days + 1) yields an offset in
+# [0, threshold_days], so the effective threshold lands in [N, 2N] days. The
+# offset is stable within a calendar week, so behaviour doesn't flap between
+# commits inside the same week.
+identity="$(git -C "$repo_root" config --get user.email 2>/dev/null || true)@$(hostname 2>/dev/null || echo unknown)@$(date +%G%V)"
 hash_hex=$(printf '%s' "$identity" | shasum | head -c 8)
 jitter_days=$(( 16#$hash_hex % (threshold_days + 1) ))
 effective_days=$(( threshold_days + jitter_days ))
