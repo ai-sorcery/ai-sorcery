@@ -2,10 +2,13 @@
 # Launch Claude Code with privacy-friendly defaults; extra args pass through.
 #
 # Defaults applied to every launch:
-#   --effort max             — deepest reasoning level
-#   --model claude-opus-4-7  — pin to Opus 4.7
-#   --rc                     — hidden CLI flag, on by default
-#                              (opt out by setting SKIP_RC=1; see below)
+#   --effort max                  — deepest reasoning level
+#   --model 'claude-opus-4-7[1m]' — pin to Opus 4.7 with the 1M-token context
+#                                   window. The [1m] suffix is the Claude Code
+#                                   opt-in for the long-context variant; quote
+#                                   the value so the shell doesn't glob it.
+#   --rc                          — hidden CLI flag, on by default
+#                                   (opt out by setting SKIP_RC=1; see below)
 #
 # Env-var inputs (callers set these; the launcher reads them):
 #   IS_DEMO=1                — hide email/org from the welcome banner
@@ -73,7 +76,7 @@ if needs_update; then
 fi
 
 if [[ "${SKIP_RC:-}" == "1" ]]; then
-  exec env IS_DEMO=1 claude --effort max --model claude-opus-4-7 "$@"
+  exec env IS_DEMO=1 claude --effort max --model 'claude-opus-4-7[1m]' "$@"
 else
-  exec env IS_DEMO=1 claude --rc --effort max --model claude-opus-4-7 "$@"
+  exec env IS_DEMO=1 claude --rc --effort max --model 'claude-opus-4-7[1m]' "$@"
 fi

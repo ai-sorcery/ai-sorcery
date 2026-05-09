@@ -1,6 +1,6 @@
 # launching-claude
 
-Drops an executable `./claude.sh` at the root of the current repo that launches Claude Code with privacy-friendly defaults — `IS_DEMO=1`, `--rc`, `--effort max`, `--model claude-opus-4-7`. See [`SKILL.md`](SKILL.md) for the trigger description Claude reads.
+Drops an executable `./claude.sh` at the root of the current repo that launches Claude Code with privacy-friendly defaults — `IS_DEMO=1`, `--rc`, `--effort max`, `--model 'claude-opus-4-7[1m]'` (the `[1m]` suffix opts into Opus 4.7's 1M-token context window). See [`SKILL.md`](SKILL.md) for the trigger description Claude reads.
 
 ## Example
 
