@@ -4,6 +4,16 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 source "$SCRIPT_DIR/config.sh"
 
+# Capture tart's unfiltered stderr to a per-run log. The pipeline below
+# silences GRPCConnectionPoolError noise from the terminal but those lines
+# are lost forever once filtered; the log preserves them for post-mortem.
+# Lives next to run.sh — if the install dir is mounted via
+# shared-folders.json, `tail -f logs/tart-*.log` also works from inside
+# the guest.
+LOG_DIR="$SCRIPT_DIR/logs"
+mkdir -p "$LOG_DIR"
+TART_LOG="$LOG_DIR/tart-$(date +%Y%m%d-%H%M%S).log"
+
 # Check that VM exists.
 if ! tart list -q 2>/dev/null | grep -q "^${VM_NAME}$"; then
   echo "Error: VM '$VM_NAME' not found. Run ./setup.sh first."
@@ -53,12 +63,29 @@ echo ""
 
 # Expand DIR_FLAGS via ${arr[@]+"${arr[@]}"} so an empty array doesn't
 # trip set -u on macOS bash 3.2 — the default shell on stock macOS.
-tart run --vnc-experimental ${DIR_FLAGS[@]+"${DIR_FLAGS[@]}"} "$VM_NAME" 2> >(grep -v "GRPCConnectionPoolError" >&2) &
+# tee writes raw stderr to TART_LOG before the grep filter strips the
+# GRPC noise from the terminal — so the log keeps everything.
+tart run --vnc-experimental ${DIR_FLAGS[@]+"${DIR_FLAGS[@]}"} "$VM_NAME" \
+  2> >(tee "$TART_LOG" | grep -v "GRPCConnectionPoolError" >&2) &
 TART_PID=$!
 
 # Wait for the VM to get an IP, then open Screen Sharing.
 echo "Waiting for VM to boot..."
 for i in $(seq 1 60); do
+  # If tart already exited (e.g. unsupported flag, image config rejected),
+  # bail immediately with its exit code and the last 20 lines of stderr
+  # — instead of burning the full 120 s and then handing off to vm-setup.sh
+  # which would also burn 120 s on its own retry loop.
+  if ! kill -0 "$TART_PID" 2>/dev/null; then
+    EXIT_CODE=0
+    wait "$TART_PID" 2>/dev/null || EXIT_CODE=$?
+    sleep 0.5  # let tee flush trailing lines into TART_LOG before we read it
+    echo ""
+    echo "Error: tart exited with status $EXIT_CODE before the VM became reachable."
+    echo "Last lines of $TART_LOG:"
+    tail -20 "$TART_LOG" 2>/dev/null | sed 's/^/  /'
+    exit 1
+  fi
   IP=$(tart ip "$VM_NAME" 2>/dev/null || true)
   if [ -n "$IP" ]; then
     echo "VM is up at $IP"

@@ -83,7 +83,7 @@ Then overwrite `<subdir>/config.sh` with the user's answers, using the plain Wri
 
 When something fails, these three diagnostics cover most cases:
 
-- **`tart run` exits silently or with `VZErrorDomain Code=1`.** Apple's framework hides the real error; pull it from the unified log:
+- **`tart run` exits silently or with `VZErrorDomain Code=1`.** First check `<install-dir>/logs/tart-*.log` — `run.sh` captures tart's unfiltered stderr there, including the `GRPCConnectionPoolError` lines that are stripped from the terminal. Both `run.sh` (during its IP-wait loop) and `vm-setup.sh` (via an upfront `tart list` state check) fail-fast when tart has already exited, so the log's last 20 lines usually surface the cause. If the log is empty or unhelpful, pull more context from Apple's unified log:
   ```bash
   /usr/bin/log show --predicate 'processImagePath CONTAINS "Virtualization" OR subsystem CONTAINS "virtualization"' --last 30m --style compact | tail -60
   ```

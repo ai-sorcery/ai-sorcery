@@ -16,7 +16,9 @@ claude-vm/
 ├── teardown.sh             # stop and delete the VM
 ├── upgrade.sh              # tart pull to refresh the cached macOS image
 ├── setup-dock.sh           # Dock cleanup (called by vm-setup.sh)
-└── setup-terminal-tabs.sh  # Terminal tabs per shared folder (called by vm-setup.sh)
+├── setup-terminal-tabs.sh  # Terminal tabs per shared folder (called by vm-setup.sh)
+├── .gitignore              # ignores logs/
+└── logs/                   # one tart-<timestamp>.log per run.sh invocation
 ```
 
 ## Quick start

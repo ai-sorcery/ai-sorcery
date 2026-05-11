@@ -17,14 +17,28 @@ want_app() {
   return 1
 }
 
+# Fail-fast if the VM isn't in the `running` state — without this we'd burn
+# 120 s in the `tart exec` retry loop below before noticing that run.sh's
+# `tart run` already died. The loop still handles the case where the VM is
+# running but the guest agent isn't answering yet.
+VM_STATE=$(tart list --format json 2>/dev/null \
+  | jq -r --arg n "$VM_NAME" '.[] | select(.Name==$n) | .State' 2>/dev/null \
+  || true)
+if [ "$VM_STATE" != "running" ]; then
+  echo "Error: VM '$VM_NAME' is not running (state: ${VM_STATE:-not found})."
+  echo "Start it first with ./run.sh (in another terminal)."
+  echo "If ./run.sh just exited, check $SCRIPT_DIR/logs/ for the latest tart-*.log."
+  exit 1
+fi
+
 echo "Waiting for VM to be reachable..."
 for i in $(seq 1 60); do
   if tart exec "$VM_NAME" true &> /dev/null; then
     break
   fi
   if [ "$i" -eq 60 ]; then
-    echo "Error: VM '$VM_NAME' is not running or guest agent not responding."
-    echo "Start it first with ./run.sh (in another terminal)."
+    echo "Error: VM '$VM_NAME' is running but guest agent is not responding."
+    echo "Try ./run.sh again, or check $SCRIPT_DIR/logs/ for the latest tart-*.log."
     exit 1
   fi
   sleep 2

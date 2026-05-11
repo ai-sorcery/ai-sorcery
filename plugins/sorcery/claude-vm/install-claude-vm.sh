@@ -35,6 +35,7 @@ declare -a files=(
   "fix-cache.sh"
   "config.example.sh:config.sh"
   "shared-folders.example.json:shared-folders.json"
+  ".gitignore"
 )
 
 copied=0
