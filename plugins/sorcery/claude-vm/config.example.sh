@@ -20,6 +20,13 @@ VM_DISPLAY="1920x1080"
 # bun, dotnet10. (Xcode is pre-installed by the default image.)
 APPS=(chrome claude-code obsidian sublime-text)
 
+# Default location for screenshots taken inside the VM, plus a Finder
+# sidebar shortcut to the same folder. Only takes effect if this path
+# (or an ancestor) is mounted via shared-folders.json — without that
+# share, screenshots default to ~/Desktop in the VM and nothing is added
+# to the Finder sidebar.
+SCREENSHOTS_DIR="~/Dev/screenshots"
+
 # No TART_HOME here — Tart uses ~/.tart by default and that's the right
 # choice for most setups. Pointing TART_HOME at a /Volumes/... path (or
 # symlinking ~/.tart to one) often fails with cross-device-link errors

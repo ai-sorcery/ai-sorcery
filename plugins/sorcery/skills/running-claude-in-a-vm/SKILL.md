@@ -68,6 +68,7 @@ Then overwrite `<subdir>/config.sh` with the user's answers, using the plain Wri
 | `VM_DISK_GB` | `150` | Disk (GB) |
 | `VM_DISPLAY` | `1920x1080` | Resolution |
 | `APPS` | `(chrome claude-code obsidian sublime-text)` | In-VM apps to install |
+| `SCREENSHOTS_DIR` | `~/Dev/screenshots` | Default in-VM screenshot folder + Finder sidebar entry. Only applies if this path (or an ancestor) is mounted via `shared-folders.json`; otherwise screenshots stay on `~/Desktop`. |
 
 ## Caveats
 

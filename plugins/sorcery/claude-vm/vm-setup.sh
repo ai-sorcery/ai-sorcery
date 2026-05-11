@@ -319,49 +319,96 @@ if want_app dotnet10; then
   '
 fi
 
-# --- Add ~/Dev to Finder sidebar favorites ---
+# --- Resolve SCREENSHOTS_DIR (or leave empty) ---
+# Convert the host-side `~` prefix to a literal `$HOME` that the guest's
+# bash will expand. Then check the path actually exists in the guest —
+# typically only true when the user mapped it via shared-folders.json.
+# Empty means the screenshot defaults + Finder favorite below are skipped,
+# so screenshots stay on ~/Desktop and the sidebar isn't polluted.
 
-echo "Adding ~/Dev to Finder sidebar favorites..."
+GUEST_SCREENSHOTS=""
+if [ -n "${SCREENSHOTS_DIR:-}" ]; then
+  CANDIDATE="${SCREENSHOTS_DIR/#\~/\$HOME}"
+  if tart exec "$VM_NAME" bash -c "test -d \"$CANDIDATE\""; then
+    GUEST_SCREENSHOTS="$CANDIDATE"
+  fi
+fi
+
+# --- Default screenshots location ---
+# SystemUIServer reads com.apple.screencapture.location on launch, so
+# restart it for the change to apply to the OS-wide screenshot hotkeys.
+
+if [ -n "$GUEST_SCREENSHOTS" ]; then
+  echo "Setting default screenshots location to $SCREENSHOTS_DIR..."
+  tart exec "$VM_NAME" bash -c "
+    defaults write com.apple.screencapture location \"$GUEST_SCREENSHOTS\"
+    killall SystemUIServer
+  "
+fi
+
+# --- Add Finder sidebar favorites ---
+# Always ~/Dev; plus SCREENSHOTS_DIR if it resolved above. The Swift helper
+# is idempotent — duplicates are detected via resolved-URL comparison so
+# re-runs are no-ops.
+
+echo "Adding Finder sidebar favorites..."
 tart exec "$VM_NAME" bash -c '
   cat > /tmp/add_sidebar.swift << '\''SWIFT'\''
 import Foundation
 import CoreServices
 
-let devPath = NSHomeDirectory() + "/Dev"
-let devURL = NSURL(fileURLWithPath: devPath)
-let listType = kLSSharedFileListFavoriteItems.takeUnretainedValue()
+let args = Array(CommandLine.arguments.dropFirst())
+guard !args.isEmpty else {
+    print("Usage: add_sidebar <path> [path...]")
+    exit(1)
+}
 
+let listType = kLSSharedFileListFavoriteItems.takeUnretainedValue()
 guard let list = LSSharedFileListCreate(nil, listType, nil)?.takeRetainedValue() else {
     print("ERROR: Failed to create shared file list")
     exit(1)
 }
 
-var seed: UInt32 = 0
-if let snapshot = LSSharedFileListCopySnapshot(list, &seed)?.takeRetainedValue() as? [LSSharedFileListItem] {
-    for item in snapshot {
-        if let resolved = LSSharedFileListItemCopyResolvedURL(item, 0, nil)?.takeRetainedValue() as NSURL? {
-            if resolved.path == devPath {
-                print("Dev already in Finder sidebar favorites")
-                exit(0)
-            }
-        }
-    }
-    if let last = snapshot.last {
-        LSSharedFileListInsertItemURL(list, last, "Dev" as NSString, nil, devURL, nil, nil)
-        print("Added Dev to Finder sidebar favorites")
-        exit(0)
-    }
+func snapshot() -> [LSSharedFileListItem] {
+    var seed: UInt32 = 0
+    return (LSSharedFileListCopySnapshot(list, &seed)?.takeRetainedValue() as? [LSSharedFileListItem]) ?? []
 }
 
-let sentinelPtr = kLSSharedFileListItemLast.toOpaque()
-let sentinel = Unmanaged<LSSharedFileListItem>.fromOpaque(sentinelPtr).takeUnretainedValue()
-LSSharedFileListInsertItemURL(list, sentinel, "Dev" as NSString, nil, devURL, nil, nil)
-print("Added Dev to Finder sidebar favorites")
+for path in args {
+    let name = (path as NSString).lastPathComponent
+    let current = snapshot()
+    var alreadyPresent = false
+    for item in current {
+        if let resolved = LSSharedFileListItemCopyResolvedURL(item, 0, nil)?.takeRetainedValue() as NSURL?,
+           resolved.path == path {
+            alreadyPresent = true
+            break
+        }
+    }
+    if alreadyPresent {
+        print("\(name) already in Finder sidebar favorites")
+        continue
+    }
+    let url = NSURL(fileURLWithPath: path)
+    if let last = current.last {
+        LSSharedFileListInsertItemURL(list, last, name as NSString, nil, url, nil, nil)
+    } else {
+        let sentinelPtr = kLSSharedFileListItemLast.toOpaque()
+        let sentinel = Unmanaged<LSSharedFileListItem>.fromOpaque(sentinelPtr).takeUnretainedValue()
+        LSSharedFileListInsertItemURL(list, sentinel, name as NSString, nil, url, nil, nil)
+    }
+    print("Added \(name) to Finder sidebar favorites")
+}
 SWIFT
   swiftc /tmp/add_sidebar.swift -o /tmp/add_sidebar -framework CoreServices -framework Foundation 2>&1 | grep -v "deprecated"
-  /tmp/add_sidebar
-  rm -f /tmp/add_sidebar /tmp/add_sidebar.swift
+  /tmp/add_sidebar "$HOME/Dev"
 '
+
+if [ -n "$GUEST_SCREENSHOTS" ]; then
+  tart exec "$VM_NAME" bash -c "/tmp/add_sidebar \"$GUEST_SCREENSHOTS\""
+fi
+
+tart exec "$VM_NAME" bash -c 'rm -f /tmp/add_sidebar /tmp/add_sidebar.swift'
 
 echo ""
 echo "VM setup complete."
