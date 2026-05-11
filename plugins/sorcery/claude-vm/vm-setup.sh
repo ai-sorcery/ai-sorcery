@@ -101,17 +101,9 @@ install_dotnet10() {
     /tmp/dotnet-install.sh --channel 10.0
     rm /tmp/dotnet-install.sh
   '
-  tart exec "$VM_NAME" bash -c '
-    PROFILE=~/.zprofile
-    if ! grep -q "DOTNET_ROOT" "$PROFILE" 2>/dev/null; then
-      {
-        echo ""
-        echo "export DOTNET_ROOT=\"\$HOME/.dotnet\""
-        echo "export PATH=\"\$DOTNET_ROOT:\$PATH\""
-      } >> "$PROFILE"
-      echo "Added .NET environment variables to $PROFILE"
-    fi
-  '
+  # PATH-append is deferred until after setup-terminal-tabs.sh runs (see
+  # bottom of this script). That script overwrites ~/.zprofile with
+  # `cat >`, which would clobber any DOTNET_ROOT/PATH lines added here.
 }
 
 install_claude_code() {
@@ -307,6 +299,24 @@ if [ ${#DEV_DIRS[@]} -gt 0 ]; then
   "$SCRIPT_DIR/setup-terminal-tabs.sh" "$VM_NAME" "${DEV_DIRS[@]}"
 else
   echo "No active terminal shared folders — skipping Terminal tab setup."
+fi
+
+# --- Append .NET PATH to ~/.zprofile (deferred from install_dotnet10) ---
+# setup-terminal-tabs.sh writes ~/.zprofile with `cat >` (overwrite), so
+# the PATH append has to happen after it. Idempotent via the grep guard.
+
+if want_app dotnet10; then
+  tart exec "$VM_NAME" bash -c '
+    PROFILE=~/.zprofile
+    if ! grep -q "DOTNET_ROOT" "$PROFILE" 2>/dev/null; then
+      {
+        echo ""
+        echo "export DOTNET_ROOT=\"\$HOME/.dotnet\""
+        echo "export PATH=\"\$DOTNET_ROOT:\$PATH\""
+      } >> "$PROFILE"
+      echo "Added .NET environment variables to $PROFILE"
+    fi
+  '
 fi
 
 # --- Add ~/Dev to Finder sidebar favorites ---
