@@ -1,0 +1,94 @@
+{
+  "providers": [
+    {
+      "id": "huggingface",
+      "label": "Hugging Face (Inference Providers)",
+      "env": "HF_TOKEN",
+      "signup_url": "https://huggingface.co/settings/tokens",
+      "docs_url": "https://huggingface.co/docs/inference-providers",
+      "litellm_prefix": "huggingface/",
+      "notes": "One token brokers access to many open-weight providers (Together, Fireworks, Replicate, Sambanova, etc). Cheapest way to try DeepSeek/Qwen/Llama-class models without per-provider signup. The HF V4 Pro route is also the first fallback for the `frontier` tier so a DeepSeek-side blip falls back to the same model on Together.",
+      "suggested_models": [
+        { "alias": "hf-deepseek-v4-pro",    "model": "huggingface/together/deepseek-ai/DeepSeek-V4-Pro",                    "tier": "frontier", "description": "DeepSeek V4 Pro via Together — same model as the first-party frontier target, different provider (fallback for `frontier`)" },
+        { "alias": "hf-deepseek-r1",        "model": "huggingface/together/deepseek-ai/DeepSeek-R1",                        "tier": "balanced", "description": "DeepSeek's reasoning model via Together" },
+        { "alias": "hf-qwen3-coder",        "model": "huggingface/together/Qwen/Qwen3-Coder-480B-A35B-Instruct",            "tier": "frontier", "description": "Qwen 3 Coder 480B via Together — strong open-weight coding model" },
+        { "alias": "hf-llama-3.3-70b",      "model": "huggingface/together/meta-llama/Llama-3.3-70B-Instruct-Turbo",        "tier": "cheap",    "description": "Llama 3.3 70B Turbo via Together — cheap general-purpose" }
+      ]
+    },
+    {
+      "id": "anthropic",
+      "label": "Anthropic (Claude)",
+      "env": "ANTHROPIC_API_KEY",
+      "signup_url": "https://console.anthropic.com/settings/keys",
+      "docs_url": "https://docs.claude.com/en/api/getting-started",
+      "litellm_prefix": "anthropic/",
+      "notes": "Frontier coding-agent quality. Routed via the dedicated `claude` tier (Opus 4.7 with 1M context, falling back to Sonnet then Haiku) — kept separate from the generic frontier/balanced/cheap tiers so an Anthropic key isn't implicitly required by every request.",
+      "suggested_models": [
+        { "alias": "claude-opus-1m", "model": "anthropic/claude-opus-4-7",   "tier": "claude", "description": "Opus 4.7 with 1M context — the default for the `claude` tier" },
+        { "alias": "claude-opus",    "model": "anthropic/claude-opus-4-7",   "tier": "claude", "description": "Opus 4.7 at default 200K context" },
+        { "alias": "claude-sonnet",  "model": "anthropic/claude-sonnet-4-6", "tier": "claude", "description": "Sonnet 4.6 — claude-tier fallback" },
+        { "alias": "claude-haiku",   "model": "anthropic/claude-haiku-4-5",  "tier": "claude", "description": "Haiku 4.5 — fast and cheap; claude-tier last fallback" }
+      ]
+    },
+    {
+      "id": "openai",
+      "label": "OpenAI",
+      "env": "OPENAI_API_KEY",
+      "signup_url": "https://platform.openai.com/api-keys",
+      "docs_url": "https://platform.openai.com/docs/quickstart",
+      "litellm_prefix": "openai/",
+      "notes": "Frontier general-purpose. GPT-5 family for top-end work, GPT-4.1-mini for cheap.",
+      "suggested_models": [
+        { "alias": "gpt-5",        "model": "openai/gpt-5",         "tier": "frontier", "description": "GPT-5 — frontier general-purpose" },
+        { "alias": "gpt-5-mini",   "model": "openai/gpt-5-mini",    "tier": "balanced", "description": "GPT-5 mini — cheaper GPT-5 tier" },
+        { "alias": "gpt-4.1-mini", "model": "openai/gpt-4.1-mini",  "tier": "cheap",    "description": "GPT-4.1 mini — cheap, fast" }
+      ]
+    },
+    {
+      "id": "deepseek",
+      "label": "DeepSeek",
+      "env": "DEEPSEEK_API_KEY",
+      "signup_url": "https://platform.deepseek.com/api_keys",
+      "docs_url": "https://api-docs.deepseek.com/",
+      "litellm_prefix": "deepseek/",
+      "notes": "First-party DeepSeek API — V4 Pro is the default frontier target, V4 Flash the default cheap tier. The legacy `deepseek-chat` and `deepseek-reasoner` model ids are still accepted but slated for deprecation per DeepSeek's docs (they both point at V4 Flash today).",
+      "suggested_models": [
+        { "alias": "deepseek-v4-pro",   "model": "deepseek/deepseek-v4-pro",   "tier": "frontier", "description": "DeepSeek V4 Pro — frontier tier default" },
+        { "alias": "deepseek-v4-flash", "model": "deepseek/deepseek-v4-flash", "tier": "cheap",    "description": "DeepSeek V4 Flash — cheap tier default" },
+        { "alias": "deepseek-chat",     "model": "deepseek/deepseek-chat",     "tier": "cheap",    "description": "Legacy alias for V4 Flash non-thinking mode (slated for deprecation)" },
+        { "alias": "deepseek-reasoner", "model": "deepseek/deepseek-reasoner", "tier": "balanced", "description": "Legacy alias for V4 Flash thinking mode (slated for deprecation)" }
+      ]
+    },
+    {
+      "id": "moonshot",
+      "label": "Moonshot AI (Kimi)",
+      "env": "MOONSHOT_API_KEY",
+      "signup_url": "https://platform.moonshot.ai/console/api-keys",
+      "docs_url": "https://platform.moonshot.ai/docs",
+      "litellm_prefix": "moonshot/",
+      "notes": "Kimi K2 has strong coding chops with long context. Default balanced-tier target.",
+      "suggested_models": [
+        { "alias": "kimi-k2",       "model": "moonshot/kimi-k2.6",             "tier": "balanced", "description": "Kimi K2.6 — balanced tier default" }
+      ]
+    },
+    {
+      "id": "minimax",
+      "label": "MiniMax",
+      "env": "MINIMAX_API_KEY",
+      "signup_url": "https://www.minimax.io/platform/user-center/basic-information/interface-key",
+      "docs_url": "https://www.minimax.io/platform/document/",
+      "litellm_prefix": "openai/",
+      "litellm_api_base": "https://api.minimax.io/v1",
+      "notes": "MiniMax exposes an OpenAI-compatible endpoint, so route via the openai/ prefix with api_base override. M2 is the current flagship.",
+      "suggested_models": [
+        { "alias": "minimax-m2", "model": "openai/MiniMax-M2", "tier": "balanced", "description": "MiniMax M2 — OpenAI-compatible endpoint" }
+      ]
+    }
+  ],
+  "default_picks": {
+    "frontier": ["deepseek-v4-pro", "hf-deepseek-v4-pro", "hf-qwen3-coder", "gpt-5"],
+    "balanced": ["kimi-k2", "deepseek-reasoner", "minimax-m2", "gpt-5-mini", "hf-deepseek-r1"],
+    "cheap":    ["deepseek-v4-flash", "hf-llama-3.3-70b", "gpt-4.1-mini"],
+    "claude":   ["claude-opus-1m", "claude-sonnet", "claude-haiku"]
+  }
+}

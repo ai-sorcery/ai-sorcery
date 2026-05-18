@@ -28,6 +28,7 @@ Click the image to watch the YouTube video that demonstrates nearly every skill.
 - [`guarding-commits`](#guarding-commits)
 - [`launching-claude`](#launching-claude)
 - [`learning-new-tech`](#learning-new-tech)
+- [`routing-llm-calls`](#routing-llm-calls)
 - [`running-claude-in-a-vm`](#running-claude-in-a-vm)
 - [`running-improvement-loops`](#running-improvement-loops)
 - [`scaffolding-repos`](#scaffolding-repos)
@@ -112,6 +113,14 @@ A coaching workflow for learning a programming language, framework, or platform 
 > I want to learn Rust.
 
 Claude scaffolds `learning/` with a flexible 10-15 milestone `OUTLINE.md`, a cross-session `NOTES.md`, and only the first lesson — `learning/01-<topic>/` with `README.md`, `start.sh`, and `score.sh`. The user types the code; subsequent invocations review the work, capture feedback, adapt the outline, and generate the next numbered lesson. Lessons are self-contained — no cross-lesson dependencies — and zero-padded for fast `cd 0<TAB>`.
+
+## [`routing-llm-calls`](plugins/sorcery/skills/routing-llm-calls)
+
+Scaffolds an `llm-routing/` directory with LiteLLM as the router and Swival as the coding agent on top, preloaded with model aliases for Anthropic, OpenAI, Hugging Face Inference Providers, DeepSeek, Moonshot (Kimi), and MiniMax. Ask:
+
+> Set up multi-provider LLM routing in this repo.
+
+Running `./llm-routing/route.sh` prints a status report (which API keys are set, which models are wired, whether the proxy is up) and drops into an interactive wizard for provisioning keys, editing the routing config, starting/stopping the proxy, and sending test requests. Swival profiles target the proxy by tier (`frontier` / `balanced` / `cheap` / `claude`) or by named model — swap tier targets in one line of `litellm.config.yaml` without touching Swival.
 
 ## [`running-claude-in-a-vm`](plugins/sorcery/skills/running-claude-in-a-vm)
 

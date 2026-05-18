@@ -1,0 +1,184 @@
+# LiteLLM proxy config. Start the proxy with:
+#
+#   ./route.sh start          # detached, logs to logs/litellm.log
+#   ./route.sh start --fg     # foreground
+#
+# It listens on http://127.0.0.1:4000 with an OpenAI-compatible API at
+# /v1/chat/completions. Swival (and any other OpenAI-compatible client)
+# talks to it as if it were OpenAI; LiteLLM dispatches each request to
+# the upstream provider based on the model_name the client requested.
+#
+# Add a model: copy one of the stanzas below, give it a unique
+# `model_name`, then point your client at that name.
+#
+# Drop a model: delete its stanza. Anything not listed here is rejected
+# by the proxy with a clear error rather than silently fanning out.
+#
+# Secrets are pulled from the environment at proxy-start time via the
+# `os.environ/<NAME>` literal — keys never live in this file. Populate
+# them in .env at the repo root (the wrapper scripts source it).
+
+model_list:
+
+  # --- Anthropic (Claude) -------------------------------------------------
+  # claude-opus-1m enables the 1M-context beta. The extra_headers value
+  # tracks Anthropic's published beta tag; bump it when Anthropic changes
+  # the tag. claude-opus on its own stays at the default 200K context.
+  - model_name: claude-opus-1m
+    litellm_params:
+      model: anthropic/claude-opus-4-7
+      api_key: os.environ/ANTHROPIC_API_KEY
+      extra_headers:
+        anthropic-beta: "context-1m-2025-08-07"
+
+  - model_name: claude-opus
+    litellm_params:
+      model: anthropic/claude-opus-4-7
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+  - model_name: claude-sonnet
+    litellm_params:
+      model: anthropic/claude-sonnet-4-6
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+  - model_name: claude-haiku
+    litellm_params:
+      model: anthropic/claude-haiku-4-5
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+  # --- OpenAI -------------------------------------------------------------
+  - model_name: gpt-5
+    litellm_params:
+      model: openai/gpt-5
+      api_key: os.environ/OPENAI_API_KEY
+
+  - model_name: gpt-5-mini
+    litellm_params:
+      model: openai/gpt-5-mini
+      api_key: os.environ/OPENAI_API_KEY
+
+  - model_name: gpt-4.1-mini
+    litellm_params:
+      model: openai/gpt-4.1-mini
+      api_key: os.environ/OPENAI_API_KEY
+
+  # --- Hugging Face Inference Providers ----------------------------------
+  # One HF_TOKEN, many upstream providers. The path after `huggingface/`
+  # is `<provider>/<hf_org>/<hf_repo>`. Drop the provider segment to fall
+  # back to HF's own serverless inference API.
+  - model_name: hf-deepseek-v4-pro
+    litellm_params:
+      model: huggingface/together/deepseek-ai/DeepSeek-V4-Pro
+      api_key: os.environ/HF_TOKEN
+
+  - model_name: hf-deepseek-r1
+    litellm_params:
+      model: huggingface/together/deepseek-ai/DeepSeek-R1
+      api_key: os.environ/HF_TOKEN
+
+  - model_name: hf-qwen3-coder
+    litellm_params:
+      model: huggingface/together/Qwen/Qwen3-Coder-480B-A35B-Instruct
+      api_key: os.environ/HF_TOKEN
+
+  - model_name: hf-llama-3.3-70b
+    litellm_params:
+      model: huggingface/together/meta-llama/Llama-3.3-70B-Instruct-Turbo
+      api_key: os.environ/HF_TOKEN
+
+  # --- DeepSeek (first-party) --------------------------------------------
+  # deepseek-v4-pro and deepseek-v4-flash are the current model ids.
+  # deepseek-chat and deepseek-reasoner are legacy aliases for V4-Flash
+  # non-thinking and V4-Flash thinking respectively; DeepSeek's docs note
+  # both are slated for deprecation. New work should target the V4 names.
+  - model_name: deepseek-v4-pro
+    litellm_params:
+      model: deepseek/deepseek-v4-pro
+      api_key: os.environ/DEEPSEEK_API_KEY
+
+  - model_name: deepseek-v4-flash
+    litellm_params:
+      model: deepseek/deepseek-v4-flash
+      api_key: os.environ/DEEPSEEK_API_KEY
+
+  - model_name: deepseek-chat
+    litellm_params:
+      model: deepseek/deepseek-chat
+      api_key: os.environ/DEEPSEEK_API_KEY
+
+  - model_name: deepseek-reasoner
+    litellm_params:
+      model: deepseek/deepseek-reasoner
+      api_key: os.environ/DEEPSEEK_API_KEY
+
+  # --- Moonshot (Kimi) ---------------------------------------------------
+  # `kimi-k2.6` is Moonshot's current flagship (released April 2026).
+  # The legacy `kimi-k2-0905-preview` and `kimi-k2-turbo-preview` ids
+  # return 404 on new keys and are scheduled for hard deprecation on
+  # 2026-05-25 per Moonshot's docs. Moonshot's current K2.6 line has
+  # no separate "turbo" variant — the previous turbo-vs-non-turbo
+  # distinction collapsed into a single model.
+  - model_name: kimi-k2
+    litellm_params:
+      model: moonshot/kimi-k2.6
+      api_key: os.environ/MOONSHOT_API_KEY
+
+  # --- MiniMax (OpenAI-compatible endpoint) ------------------------------
+  - model_name: minimax-m2
+    litellm_params:
+      model: openai/MiniMax-M2
+      api_base: https://api.minimax.io/v1
+      api_key: os.environ/MINIMAX_API_KEY
+
+# Tier aliases give the client a stable name ("frontier" / "balanced" /
+# "cheap" / "claude") that resolves to a concrete model_name. Re-target
+# the right-hand side when a new winner shows up; clients keep asking for
+# the tier name. Claude is its own tier (not the default for any
+# generic tier) so a request to `frontier` doesn't quietly require an
+# ANTHROPIC_API_KEY — `claude` is the deliberate Claude-only path.
+router_settings:
+  model_group_alias:
+    frontier: deepseek-v4-pro
+    balanced: kimi-k2
+    cheap:    deepseek-v4-flash
+    claude:   claude-opus-1m
+
+  # Provider-diversified fallbacks: when the primary returns 429/5xx/timeout
+  # /auth-error, cascade to alternates on different providers so a single
+  # upstream outage can't take a tier down. Keyed by the *requested*
+  # model_group (i.e., the tier alias the client sends) — LiteLLM looks
+  # up fallbacks before resolving the alias, so keying by the resolved
+  # model_name (e.g., `kimi-k2`) silently misses every request to
+  # `balanced`. The first fallback for `frontier` is the same model on a
+  # different upstream (HF Together's V4 Pro), so a DeepSeek-side blip
+  # doesn't change the model under the request.
+  fallbacks:
+    - frontier: [hf-deepseek-v4-pro, kimi-k2, hf-qwen3-coder]
+    - balanced: [deepseek-v4-flash, hf-qwen3-coder]
+    - cheap:    [kimi-k2, hf-llama-3.3-70b]
+    - claude:   [claude-sonnet, claude-haiku]
+
+general_settings:
+  # Local proxy — no auth in front of it. If you expose this off-host,
+  # uncomment master_key and require it on every request.
+  # master_key: sk-CHANGE-ME
+
+litellm_settings:
+  # Drop request params the upstream provider doesn't recognise instead of
+  # surfacing a 400. Friendlier when swapping models with different feature
+  # sets (e.g., reasoning_effort on a model that doesn't support it).
+  drop_params: true
+
+  # Structured JSON logs to stdout — one record per request with model
+  # alias, upstream model, token counts, latency, cost, and
+  # litellm_call_id (the canonical correlation id — use this rather than
+  # response.id, which is the upstream's id and varies by provider).
+  # start-proxy.sh redirects stdout into logs/litellm.log; observability.ts
+  # filters and surfaces request records (`./route.sh tail` streams them,
+  # `./route.sh costs` aggregates).
+  #
+  # Clients can attach a per-request correlation token via the request
+  # body's `metadata.user_correlation_id` — LiteLLM threads it into the
+  # log record so test runs can match a record to a known request without
+  # racing on response.id.
+  json_logs: true

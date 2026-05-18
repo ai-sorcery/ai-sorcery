@@ -31,6 +31,17 @@ export const SKILLS: DemoSkill[] = [
   },
   { name: "running-improvement-loops", status: "covered" },
   {
+    name: "routing-llm-calls",
+    status: "skipped",
+    reason:
+      "End-to-end demo would require live API keys for at least one paid " +
+      "provider (Anthropic, OpenAI, DeepSeek, Moonshot, MiniMax) or a " +
+      "Hugging Face account, plus installing litellm and swival as Python " +
+      "tools inside the demo VM. The skill's own wizard is the better " +
+      "walk-through — exercise it manually when adding or refactoring " +
+      "this skill.",
+  },
+  {
     name: "scaffolding-repos",
     status: "skipped",
     reason:

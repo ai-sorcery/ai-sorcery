@@ -1,0 +1,79 @@
+# Swival profiles, each pointing at the LiteLLM proxy on
+# http://127.0.0.1:4000. The proxy is OpenAI-compatible, so Swival's
+# `generic` provider is the right shape — it speaks `/v1/chat/completions`.
+#
+# Pick a profile at startup:    swival --profile cheap
+# Switch mid-session:           /profile frontier
+#
+# The `model` field here is the LiteLLM `model_name` (or model_group
+# alias) — LiteLLM resolves it to the upstream call.
+#
+# `api_key` is intentionally NOT set in this file. The local proxy
+# accepts any value, and Swival warns when api_key appears in a
+# git-tracked project config. ./llm.sh passes `--api-key not-needed` on
+# the CLI; if you turn on master_key in litellm.config.yaml, swap that
+# flag in llm.sh for your actual key.
+
+# Tier aliases — re-target via the wizard's "Re-target a tier alias"
+# choice (or by editing model_group_alias in litellm.config.yaml).
+
+[profiles.frontier]
+provider = "generic"
+base_url = "http://127.0.0.1:4000"
+model    = "frontier"
+
+[profiles.balanced]
+provider = "generic"
+base_url = "http://127.0.0.1:4000"
+model    = "balanced"
+
+[profiles.cheap]
+provider = "generic"
+base_url = "http://127.0.0.1:4000"
+model    = "cheap"
+
+# Claude tier — deliberate Claude-only path. Defaults to Opus 4.7 with
+# the 1M context window, falling back to Sonnet then Haiku via the
+# proxy's router_settings.fallbacks block.
+[profiles.claude]
+provider = "generic"
+base_url = "http://127.0.0.1:4000"
+model    = "claude"
+
+# Direct-named profiles for when you want a specific model rather than
+# a tier alias.
+
+[profiles.opus]
+provider = "generic"
+base_url = "http://127.0.0.1:4000"
+model    = "claude-opus-1m"
+
+[profiles.sonnet]
+provider = "generic"
+base_url = "http://127.0.0.1:4000"
+model    = "claude-sonnet"
+
+[profiles.gpt5]
+provider = "generic"
+base_url = "http://127.0.0.1:4000"
+model    = "gpt-5"
+
+[profiles.deepseek-r1]
+provider = "generic"
+base_url = "http://127.0.0.1:4000"
+model    = "hf-deepseek-r1"
+
+[profiles.deepseek-v4-pro]
+provider = "generic"
+base_url = "http://127.0.0.1:4000"
+model    = "deepseek-v4-pro"
+
+[profiles.qwen-coder]
+provider = "generic"
+base_url = "http://127.0.0.1:4000"
+model    = "hf-qwen3-coder"
+
+[profiles.kimi]
+provider = "generic"
+base_url = "http://127.0.0.1:4000"
+model    = "kimi-k2"
