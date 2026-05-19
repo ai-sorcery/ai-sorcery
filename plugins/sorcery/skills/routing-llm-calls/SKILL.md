@@ -13,18 +13,23 @@ Drops two things into the current repo:
    scripts.
 2. A small set of repo-root entrypoints:
    - `llm.sh` — boot-the-pipeline shortcut. Starts the proxy on first
-     call (idempotent), polls `/health/readiness`, and exec's
-     Swival with explicit `--provider/--base-url/--model/--api-key`
-     flags so cwd doesn't matter.
+     call (idempotent), polls `/health/readiness`, stages
+     `swival.toml` in cwd (so cross-project launches find the
+     profiles), and runs Swival via `--profile`. The staged file is
+     removed on exit.
    - `swival.toml` — at the exact path Swival looks for project config.
-     Profiles point at the loopback proxy by tier name.
+     Profiles point at the loopback proxy by tier name and carry a
+     per-profile `max_context_tokens` derived from the smallest
+     window across that tier's fallback chain.
    - `.env.example` — template for provider keys. `llm.sh` and
      `route.sh` source `.env` before launching the proxy.
 
 Tier aliases ship provider-diversified — `frontier → deepseek-v4-pro`,
-`balanced → kimi-k2`, `cheap → deepseek-v4-flash`. The frontier tier's
-first fallback is the same V4-Pro model on HF Together, so a
-DeepSeek-side blip doesn't change the model under the request. Claude
+`balanced → hf-qwen3.6`, `cheap → deepseek-v4-flash`. The frontier
+tier's first fallback is the same V4-Pro model on HF Together, so a
+DeepSeek-side blip doesn't change the model under the request. The
+balanced tier's first fallback is `kimi-k2` (Moonshot), keeping a
+provider-diverse Plan B for either Qwen or DeepSeek outages. Claude
 lives on a dedicated `claude` tier (Opus 4.7 with the 1M-context beta,
 falling back to Sonnet then Haiku via `router_settings.fallbacks`).
 The generic tiers don't implicitly require `ANTHROPIC_API_KEY`.
@@ -68,9 +73,14 @@ After the install, tell the user the three follow-ups:
    ```
 3. **Boot a session**:
    ```bash
-   ./llm.sh             # default profile: claude
-   ./llm.sh cheap       # or frontier / balanced / claude
+   ./llm.sh             # default profile: frontier
+   ./llm.sh claude      # or frontier / balanced / cheap / claude
    ```
+   On launch, `llm.sh` lists every directory the agent will have
+   access to (cwd, plus anything in `SWIVAL_ADD_DIRS`) and offers to
+   add more. Accepted entries are persisted to `.env` so subsequent
+   launches just confirm the set.
+
    The wizard interface (`./llm-routing/route.sh`) covers status,
    alias verification, tier re-targeting, request-log tail, and cost
    aggregation.
@@ -146,8 +156,11 @@ do a full setup without re-launching.
   providers.
 - **Swival is the coding-agent UI.** Its `generic` provider speaks the
   OpenAI shape, so every profile in `swival.toml` points at the local
-  proxy. `llm.sh` invokes Swival with explicit flags so cwd doesn't
-  matter and the per-cwd `swival.toml` lookup is bypassed.
+  proxy. `llm.sh` invokes Swival via `--profile NAME` so provider,
+  base_url, model, and `max_context_tokens` all flow from the named
+  profile block. Because Swival reads `swival.toml` from cwd, `llm.sh`
+  stages this repo's copy at `$PWD` for the session and removes it on
+  exit (refusing to clobber a different pre-existing one).
 - **The wizard is pure Bun TS.** No external npm deps, no Python in
   the user's code path. `status.ts`, `wizard.ts`, and `observability.ts`
   share a small naive YAML parser sufficient for configs produced by
@@ -187,6 +200,12 @@ do a full setup without re-launching.
   failing with a beta-header error, update `extra_headers` in the
   `claude-opus-1m` stanza of `litellm.config.yaml`.
 - **`logs/` and `.venv/` are per-machine.** Both are git-ignored.
+- **Cross-project `swival.toml` is staged, not referenced.** Swival
+  reads project config from `<base-dir>/swival.toml` and has no flag
+  to override that path, so cross-project launches stage this repo's
+  `swival.toml` in cwd for the session. If upstream adds a
+  `--config FILE` or `SWIVAL_PROJECT_CONFIG` knob, `llm.sh` can drop
+  the copy-and-clean dance and point Swival at the source directly.
 
 ## When not to use
 

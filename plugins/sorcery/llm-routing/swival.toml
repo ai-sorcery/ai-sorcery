@@ -13,67 +13,86 @@
 # git-tracked project config. ./llm.sh passes `--api-key not-needed` on
 # the CLI; if you turn on master_key in litellm.config.yaml, swap that
 # flag in llm.sh for your actual key.
+#
+# `max_context_tokens` is the input-window cap Swival uses to size its
+# prompt (for compaction decisions and HISTORY trimming). It is NOT an
+# output cap — that's --max-output-tokens (default 32768). For tier
+# profiles the value is the smallest window across the tier's fallback
+# chain in litellm.config.yaml, so a fallback never receives a prompt
+# larger than it can handle. Direct-named profiles use the single
+# upstream model's window.
 
 # Tier aliases — re-target via the wizard's "Re-target a tier alias"
 # choice (or by editing model_group_alias in litellm.config.yaml).
 
 [profiles.frontier]
-provider = "generic"
-base_url = "http://127.0.0.1:4000"
-model    = "frontier"
+provider            = "generic"
+base_url            = "http://127.0.0.1:4000"
+model               = "frontier"
+max_context_tokens  = 128000   # DeepSeek V4 Pro floor; fallbacks (V4 Pro via Together, R1, Qwen3.5/3.6, Kimi K2) all >= 128K
 
 [profiles.balanced]
-provider = "generic"
-base_url = "http://127.0.0.1:4000"
-model    = "balanced"
+provider            = "generic"
+base_url            = "http://127.0.0.1:4000"
+model               = "balanced"
+max_context_tokens  = 128000   # Qwen3.6 primary; V4 Flash in fallback caps the chain at 128K
 
 [profiles.cheap]
-provider = "generic"
-base_url = "http://127.0.0.1:4000"
-model    = "cheap"
+provider            = "generic"
+base_url            = "http://127.0.0.1:4000"
+model               = "cheap"
+max_context_tokens  = 128000   # V4 Flash primary; Llama 3.3 70B in fallback
 
 # Claude tier — deliberate Claude-only path. Defaults to Opus 4.7 with
 # the 1M context window, falling back to Sonnet then Haiku via the
 # proxy's router_settings.fallbacks block.
 [profiles.claude]
-provider = "generic"
-base_url = "http://127.0.0.1:4000"
-model    = "claude"
+provider            = "generic"
+base_url            = "http://127.0.0.1:4000"
+model               = "claude"
+max_context_tokens  = 200000   # Opus-1M primary, but Sonnet/Haiku fallbacks are 200K — floor wins
 
 # Direct-named profiles for when you want a specific model rather than
 # a tier alias.
 
 [profiles.opus]
-provider = "generic"
-base_url = "http://127.0.0.1:4000"
-model    = "claude-opus-1m"
+provider            = "generic"
+base_url            = "http://127.0.0.1:4000"
+model               = "claude-opus-1m"
+max_context_tokens  = 1000000  # 1M beta enabled in litellm.config.yaml
 
 [profiles.sonnet]
-provider = "generic"
-base_url = "http://127.0.0.1:4000"
-model    = "claude-sonnet"
+provider            = "generic"
+base_url            = "http://127.0.0.1:4000"
+model               = "claude-sonnet"
+max_context_tokens  = 200000
 
 [profiles.gpt5]
-provider = "generic"
-base_url = "http://127.0.0.1:4000"
-model    = "gpt-5"
+provider            = "generic"
+base_url            = "http://127.0.0.1:4000"
+model               = "gpt-5"
+max_context_tokens  = 400000
 
 [profiles.deepseek-r1]
-provider = "generic"
-base_url = "http://127.0.0.1:4000"
-model    = "hf-deepseek-r1"
+provider            = "generic"
+base_url            = "http://127.0.0.1:4000"
+model               = "hf-deepseek-r1"
+max_context_tokens  = 128000
 
 [profiles.deepseek-v4-pro]
-provider = "generic"
-base_url = "http://127.0.0.1:4000"
-model    = "deepseek-v4-pro"
+provider            = "generic"
+base_url            = "http://127.0.0.1:4000"
+model               = "deepseek-v4-pro"
+max_context_tokens  = 128000
 
 [profiles.qwen-coder]
-provider = "generic"
-base_url = "http://127.0.0.1:4000"
-model    = "hf-qwen3-coder"
+provider            = "generic"
+base_url            = "http://127.0.0.1:4000"
+model               = "hf-qwen3-coder-next"
+max_context_tokens  = 256000
 
 [profiles.kimi]
-provider = "generic"
-base_url = "http://127.0.0.1:4000"
-model    = "kimi-k2"
+provider            = "generic"
+base_url            = "http://127.0.0.1:4000"
+model               = "kimi-k2"
+max_context_tokens  = 200000

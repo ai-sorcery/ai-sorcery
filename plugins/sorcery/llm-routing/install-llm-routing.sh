@@ -144,9 +144,11 @@ Next:
        cp $project_root/.env.example $project_root/.env
        \$EDITOR $project_root/.env
   3. Boot a swival session pointed at the proxy:
-       $project_root/llm.sh            # default profile: claude
-       $project_root/llm.sh cheap      # or frontier / balanced / claude
-     llm.sh starts the proxy on first call, reuses it after.
+       $project_root/llm.sh            # default profile: frontier
+       $project_root/llm.sh claude     # or frontier / balanced / cheap / claude
+     llm.sh starts the proxy on first call, reuses it after. It also
+     lists the directories the agent will have access to and offers
+     to add more — additions land in .env under SWIVAL_ADD_DIRS.
   4. The wizard interface (status, retarget tiers, verify aliases, etc.):
        $target_dir/route.sh
 EOF

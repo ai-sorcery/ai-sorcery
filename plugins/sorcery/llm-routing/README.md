@@ -19,10 +19,15 @@ $EDITOR .env
 
 # 3. Boot the pipeline: starts the proxy if needed, polls /health/readiness
 #    for readiness, drops you into a Swival session pointed at it.
-./llm.sh                  # default profile: claude
-./llm.sh cheap            # or frontier / balanced / claude
+./llm.sh                  # default profile: frontier
+./llm.sh claude           # or frontier / balanced / cheap / claude
 ./llm.sh --profile cheap  # any swival flag passes through
 ```
+
+`llm.sh` lists the directories the agent will have access to on every
+launch (the cwd, plus anything in `SWIVAL_ADD_DIRS`) and offers to
+add more. Accepted entries are persisted to `.env` so the next launch
+just confirms.
 
 The wizard interface (status, retarget tiers, verify aliases, observability):
 
@@ -87,7 +92,7 @@ to keep model choices out of code:
 | Tier      | Default target      | Why |
 |-----------|---------------------|-----|
 | frontier  | `deepseek-v4-pro`   | First-party DeepSeek V4 Pro. Falls back to the same model on HF Together (`hf-deepseek-v4-pro`) first, so a DeepSeek-side blip doesn't change the model under the request. |
-| balanced  | `kimi-k2`           | Strong long-context coding model via Moonshot. |
+| balanced  | `hf-qwen3.6`        | Qwen3.6 35B-A3B via Hugging Face (DeepInfra route). Falls back to `kimi-k2` (Moonshot) and the same Qwen3-Coder-480B on Novita (`hf-qwen3-coder-next`) so a DeepInfra blip doesn't take the tier down. |
 | cheap     | `deepseek-v4-flash` | First-party DeepSeek V4 Flash (the current `deepseek-chat` and `deepseek-reasoner` legacy aliases also point here). |
 | claude    | `claude-opus-1m`    | Opus 4.7 with the 1M-context beta enabled. Kept on its own tier so the generic frontier/balanced/cheap tiers don't implicitly require an Anthropic key. |
 
@@ -105,6 +110,12 @@ scripts source it before launching the proxy, so a fresh shell isn't
 required. `.env.example` lists every variable the shipped config
 references — copy it, keep the lines you have, delete the rest.
 
+If `llm.sh` is launched from a directory other than where it lives,
+a second `.env` in that launch directory is also sourced (after the
+first). That's where per-project state like `SWIVAL_ADD_DIRS` gets
+written, so a sibling-repo grant stays scoped to the project that
+asked for it.
+
 ```bash
 cp .env.example .env
 $EDITOR .env
@@ -113,8 +124,8 @@ $EDITOR .env
 The proxy only fails when a request targets a model whose key is
 missing. Tier aliases inherit their target's env requirement: with
 `HF_TOKEN` set but `DEEPSEEK_API_KEY` unset, a request to `frontier`
-(→ `deepseek-v4-pro`) falls through to `hf-qwen3-coder` via the
-fallback chain.
+(→ `deepseek-v4-pro`) falls through to `hf-deepseek-v4-pro` (same
+model on HF) and then to the Qwen variants via the fallback chain.
 
 ## Observability
 

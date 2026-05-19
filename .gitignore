@@ -11,3 +11,6 @@ docs/superpowers/
 
 # Sandbox for the demoing-sorcery-skills meta-skill — wiped on every run
 demo-workspace/
+
+# Swival per-cwd session state — transcripts, repl_history, cache.db, memory/
+.swival/

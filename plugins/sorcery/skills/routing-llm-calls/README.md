@@ -58,10 +58,16 @@ quietly stage provider keys or prompt transcripts.
 cp .env.example .env          # one-time: fill in provider keys
 $EDITOR .env
 
-./llm.sh                      # default profile: claude
-./llm.sh cheap                # or frontier / balanced / claude
+./llm.sh                      # default profile: frontier
+./llm.sh claude               # or frontier / balanced / cheap / claude
 ./llm-routing/route.sh        # status + wizard menu
 ```
+
+On every launch `llm.sh` prints the directories the agent will have
+read/write access to and offers to add more. The cwd is always
+included (Swival's auto-detected `--base-dir`); additional paths are
+persisted to `.env` via `SWIVAL_ADD_DIRS` so cross-repo sessions
+don't need re-typing each time.
 
 ## Architecture
 

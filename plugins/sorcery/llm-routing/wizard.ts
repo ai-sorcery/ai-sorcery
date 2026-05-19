@@ -175,7 +175,7 @@ async function sendTestRequest(): Promise<void> {
   console.log(`  ${BOLD}claude${RESET} | ${BOLD}frontier${RESET} | ${BOLD}balanced${RESET} | ${BOLD}cheap${RESET}  ${DIM}(tier aliases)${RESET}`)
   console.log(`  ${BOLD}claude-opus-1m${RESET}, ${BOLD}gpt-4.1-mini${RESET}, ${BOLD}deepseek-chat${RESET}, ${BOLD}kimi-k2${RESET}, …`)
   console.log()
-  const model = (await prompt("Model alias (default 'claude'): ")).trim() || "claude"
+  const model = (await prompt("Model alias (default 'frontier'): ")).trim() || "frontier"
   const userPrompt = (await prompt("Prompt (default 'say hi in five words'): ")).trim() || "say hi in five words"
   console.log()
   console.log(`${DIM}POST http://127.0.0.1:4000/v1/chat/completions${RESET}`)

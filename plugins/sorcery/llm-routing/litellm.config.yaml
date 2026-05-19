@@ -76,9 +76,19 @@ model_list:
       model: huggingface/together/deepseek-ai/DeepSeek-R1
       api_key: os.environ/HF_TOKEN
 
-  - model_name: hf-qwen3-coder
+  - model_name: hf-qwen3.6
     litellm_params:
-      model: huggingface/together/Qwen/Qwen3-Coder-480B-A35B-Instruct
+      model: huggingface/deepinfra/Qwen/Qwen3.6-35B-A3B
+      api_key: os.environ/HF_TOKEN
+
+  - model_name: hf-qwen3.5
+    litellm_params:
+      model: huggingface/deepinfra/Qwen/Qwen3.5-397B-A17B
+      api_key: os.environ/HF_TOKEN
+
+  - model_name: hf-qwen3-coder-next
+    litellm_params:
+      model: huggingface/novita/Qwen/Qwen3-Coder-480B-A35B-Instruct
       api_key: os.environ/HF_TOKEN
 
   - model_name: hf-llama-3.3-70b
@@ -139,7 +149,7 @@ model_list:
 router_settings:
   model_group_alias:
     frontier: deepseek-v4-pro
-    balanced: kimi-k2
+    balanced: hf-qwen3.6
     cheap:    deepseek-v4-flash
     claude:   claude-opus-1m
 
@@ -153,8 +163,8 @@ router_settings:
   # different upstream (HF Together's V4 Pro), so a DeepSeek-side blip
   # doesn't change the model under the request.
   fallbacks:
-    - frontier: [hf-deepseek-v4-pro, kimi-k2, hf-qwen3-coder]
-    - balanced: [deepseek-v4-flash, hf-qwen3-coder]
+    - frontier: [hf-deepseek-v4-pro, hf-qwen3.5, kimi-k2, hf-qwen3.6, hf-qwen3-coder-next]
+    - balanced: [kimi-k2, deepseek-v4-flash, hf-qwen3-coder-next]
     - cheap:    [kimi-k2, hf-llama-3.3-70b]
     - claude:   [claude-sonnet, claude-haiku]
 
