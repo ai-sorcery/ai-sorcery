@@ -8,7 +8,7 @@ entrypoints with:
   and MiniMax.
 - Tier aliases `frontier` / `balanced` / `cheap` (provider-diversified,
   no implicit Anthropic dependency) plus a dedicated `claude` tier
-  (Opus 4.7 with 1M context, falling back to Sonnet then Haiku).
+  (Opus 4.8 with 1M context, falling back to Sonnet then Haiku).
 - A Swival coding-agent config preloaded with profiles that target the
   local proxy by tier or by named model.
 - A Nix flake (`flake.nix`) that pins the toolchain (Python 3.13, Bun,

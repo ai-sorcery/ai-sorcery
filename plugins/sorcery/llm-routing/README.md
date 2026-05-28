@@ -94,7 +94,7 @@ to keep model choices out of code:
 | frontier  | `deepseek-v4-pro`   | First-party DeepSeek V4 Pro. Falls back to the same model on HF Together (`hf-deepseek-v4-pro`) first, so a DeepSeek-side blip doesn't change the model under the request. |
 | balanced  | `hf-qwen3.6`        | Qwen3.6 35B-A3B via Hugging Face (DeepInfra route). Falls back to `kimi-k2` (Moonshot) and the same Qwen3-Coder-480B on Novita (`hf-qwen3-coder-next`) so a DeepInfra blip doesn't take the tier down. |
 | cheap     | `deepseek-v4-flash` | First-party DeepSeek V4 Flash (the current `deepseek-chat` and `deepseek-reasoner` legacy aliases also point here). |
-| claude    | `claude-opus-1m`    | Opus 4.7 with the 1M-context beta enabled. Kept on its own tier so the generic frontier/balanced/cheap tiers don't implicitly require an Anthropic key. |
+| claude    | `claude-opus-1m`    | Opus 4.8 with the 1M-context beta enabled. Kept on its own tier so the generic frontier/balanced/cheap tiers don't implicitly require an Anthropic key. |
 
 Each tier's resolved target has a provider-diversified fallback chain
 configured in `router_settings.fallbacks`, so a 429/5xx/timeout on the

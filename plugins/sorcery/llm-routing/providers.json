@@ -24,10 +24,10 @@
       "signup_url": "https://console.anthropic.com/settings/keys",
       "docs_url": "https://docs.claude.com/en/api/getting-started",
       "litellm_prefix": "anthropic/",
-      "notes": "Frontier coding-agent quality. Routed via the dedicated `claude` tier (Opus 4.7 with 1M context, falling back to Sonnet then Haiku) — kept separate from the generic frontier/balanced/cheap tiers so an Anthropic key isn't implicitly required by every request.",
+      "notes": "Frontier coding-agent quality. Routed via the dedicated `claude` tier (Opus 4.8 with 1M context, falling back to Sonnet then Haiku) — kept separate from the generic frontier/balanced/cheap tiers so an Anthropic key isn't implicitly required by every request.",
       "suggested_models": [
-        { "alias": "claude-opus-1m", "model": "anthropic/claude-opus-4-7",   "tier": "claude", "description": "Opus 4.7 with 1M context — the default for the `claude` tier" },
-        { "alias": "claude-opus",    "model": "anthropic/claude-opus-4-7",   "tier": "claude", "description": "Opus 4.7 at default 200K context" },
+        { "alias": "claude-opus-1m", "model": "anthropic/claude-opus-4-8",   "tier": "claude", "description": "Opus 4.8 with 1M context — the default for the `claude` tier" },
+        { "alias": "claude-opus",    "model": "anthropic/claude-opus-4-8",   "tier": "claude", "description": "Opus 4.8 at default 200K context" },
         { "alias": "claude-sonnet",  "model": "anthropic/claude-sonnet-4-6", "tier": "claude", "description": "Sonnet 4.6 — claude-tier fallback" },
         { "alias": "claude-haiku",   "model": "anthropic/claude-haiku-4-5",  "tier": "claude", "description": "Haiku 4.5 — fast and cheap; claude-tier last fallback" }
       ]

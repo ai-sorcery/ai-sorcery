@@ -195,7 +195,7 @@ If iteration ≥ 2, \`tail -n 400 "\$TASK_LOOP_PREV_LOG_FILE"\` shows what the p
 PROMPT
 
   claude -p \
-      --model "claude-opus-4-7[1m]" \
+      --model "claude-opus-4-8[1m]" \
       --effort max \
       --dangerously-skip-permissions \
       --output-format stream-json \

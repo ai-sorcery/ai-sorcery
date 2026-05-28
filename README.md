@@ -102,7 +102,7 @@ Run it with `./claude.sh`. It sets:
 - `IS_DEMO=1`
 - `--rc`
 - `--effort max`
-- `--model claude-opus-4-7`
+- `--model claude-opus-4-8`
 
 ## [`learning-new-tech`](plugins/sorcery/skills/learning-new-tech)
 

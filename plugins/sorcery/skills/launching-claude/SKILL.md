@@ -1,6 +1,6 @@
 ---
 name: launching-claude
-description: Use when the user wants Claude Code to launch with privacy-friendly defaults (hidden account email/org, --rc, --effort max, --model 'claude-opus-4-7[1m]') for a specific repo. Creates an executable `claude.sh` at the repo root so the user runs `./claude.sh` locally — no shell aliases, no symlinks, no $PATH changes.
+description: Use when the user wants Claude Code to launch with privacy-friendly defaults (hidden account email/org, --rc, --effort max, --model 'claude-opus-4-8[1m]') for a specific repo. Creates an executable `claude.sh` at the repo root so the user runs `./claude.sh` locally — no shell aliases, no symlinks, no $PATH changes.
 ---
 
 # Launching Claude
@@ -22,13 +22,13 @@ Prefer a single invocation of `install-launcher.sh` over an inline `cp && chmod`
 ## What the launcher does
 
 ```bash
-exec env IS_DEMO=1 claude --rc --effort max --model 'claude-opus-4-7[1m]' "$@"
+exec env IS_DEMO=1 claude --rc --effort max --model 'claude-opus-4-8[1m]' "$@"
 ```
 
 - **`IS_DEMO=1`** — undocumented Anthropic env var that hides the account email and organization from the welcome banner. Confirmed live in v2.1.116. Side effect: skips first-run onboarding prompts.
 - **`--rc`** — hidden CLI flag.
 - **`--effort max`** — deepest reasoning level.
-- **`--model 'claude-opus-4-7[1m]'`** — pins to Opus 4.7 with the 1M-token context window. The `[1m]` suffix is the Claude Code opt-in for the long-context variant; the value is single-quoted so the shell doesn't try to glob the brackets.
+- **`--model 'claude-opus-4-8[1m]'`** — pins to Opus 4.8 with the 1M-token context window. The `[1m]` suffix is the Claude Code opt-in for the long-context variant; the value is single-quoted so the shell doesn't try to glob the brackets.
 
 Extra arguments pass through, so the launcher is a drop-in for `claude`: `./claude.sh -c`, `./claude.sh "do the thing"`, `./claude.sh --worktree`, etc.
 

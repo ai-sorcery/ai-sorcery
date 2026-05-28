@@ -117,7 +117,7 @@ while true; do
   # code. `< /dev/null` so the background key listener below can own stdin
   # without claude grabbing keystrokes first.
   claude -p \
-      --model "claude-opus-4-7[1m]" \
+      --model "claude-opus-4-8[1m]" \
       --effort max \
       --dangerously-skip-permissions \
       --output-format stream-json \

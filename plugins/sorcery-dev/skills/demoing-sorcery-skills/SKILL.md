@@ -116,7 +116,7 @@ Narrate both edits explicitly so the audience understands the why:
 
 > "We're forcing `SKIP_RC=1` so the launcher omits `--rc` on every run, and we're injecting `--plugin-dir` so the new session loads the same sorcery plugins this session uses. The plugin's canonical `claude.sh` is unchanged; both are local edits."
 
-Verify with `cat ./claude.sh` — show the `SKIP_RC=1` line near the top, and confirm both `exec` lines carry the two `--plugin-dir` flags pointing at absolute paths plus the unchanged `--effort max --model claude-opus-4-7` tail. The launcher takes the `SKIP_RC=1` branch on every invocation, so the actual command line that runs is the no-`--rc` form. We won't run `./claude.sh` here (no nesting); the actual switchover happens after step 8.
+Verify with `cat ./claude.sh` — show the `SKIP_RC=1` line near the top, and confirm both `exec` lines carry the two `--plugin-dir` flags pointing at absolute paths plus the unchanged `--effort max --model claude-opus-4-8` tail. The launcher takes the `SKIP_RC=1` branch on every invocation, so the actual command line that runs is the no-`--rc` form. We won't run `./claude.sh` here (no nesting); the actual switchover happens after step 8.
 
 > "After the next few steps, we'll open a new Terminal tab and come back through `./claude.sh`. From that point on, snippet-box is a `./claude.sh` project. We don't exit the original session — Claude Code prints a resume-ID line on `/exit` that we don't want in the recording."
 

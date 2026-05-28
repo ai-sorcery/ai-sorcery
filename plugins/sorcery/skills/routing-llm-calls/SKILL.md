@@ -30,7 +30,7 @@ tier's first fallback is the same V4-Pro model on HF Together, so a
 DeepSeek-side blip doesn't change the model under the request. The
 balanced tier's first fallback is `kimi-k2` (Moonshot), keeping a
 provider-diverse Plan B for either Qwen or DeepSeek outages. Claude
-lives on a dedicated `claude` tier (Opus 4.7 with the 1M-context beta,
+lives on a dedicated `claude` tier (Opus 4.8 with the 1M-context beta,
 falling back to Sonnet then Haiku via `router_settings.fallbacks`).
 The generic tiers don't implicitly require `ANTHROPIC_API_KEY`.
 
@@ -189,7 +189,7 @@ do a full setup without re-launching.
 - **MiniMax routes via the OpenAI provider with `api_base` override.**
   MiniMax exposes an OpenAI-compatible endpoint, so LiteLLM dispatches
   it through the `openai/` driver pointed at `https://api.minimax.io/v1`.
-- **Model identifiers age.** The shipped `claude-opus-4-7`, `gpt-5`,
+- **Model identifiers age.** The shipped `claude-opus-4-8`, `gpt-5`,
   `kimi-k2.6`, etc. are correct at scaffold time but providers retire
   and rename models. The wizard's `Verify all model aliases` choice
   pings each one and reports which still work; a 404 from a reachable
